@@ -10,7 +10,7 @@ public class PQueue extends java.util.PriorityQueue<Node>{
 
 		@Override
 		public int compare(Node o1, Node o2) {
-			
+			ManhattanDistance md = new ManhattanDistance();
 			int result = (o1.getCost() + ManhattanDistance.calculate(o1.getState()) - (o2.getCost() + ManhattanDistance.calculate(o2.getState())));	
 //			int result = (ManhattanDistance.calculate(o1.getState()) - ( ManhattanDistance.calculate(o2.getState())));	
 			
