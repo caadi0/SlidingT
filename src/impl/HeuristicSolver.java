@@ -15,8 +15,8 @@ public class HeuristicSolver {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
-		System.setOut(out);
+//		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
+//		System.setOut(out);
 		State randomState = HeuristicSolver.createRandom(3);
 		System.out.println("Random State");
 		HeuristicSolver.printState(randomState);
