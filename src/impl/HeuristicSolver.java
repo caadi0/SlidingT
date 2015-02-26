@@ -15,8 +15,8 @@ public class HeuristicSolver {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-//		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
-//		System.setOut(out);
+		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
+		System.setOut(out);
 		State randomState = HeuristicSolver.createRandom(3);
 		System.out.println("Random State");
 		HeuristicSolver.printState(randomState);
@@ -61,7 +61,7 @@ public class HeuristicSolver {
 		
 	}
 	
-	private static void printPath(Node node) {
+	public static void printPath(Node node) {
 		if(node.getParent() != null) {
 			printPath(node.getParent());
 			System.out.println("Tile "+node.getAction().getMove());
@@ -78,7 +78,7 @@ public class HeuristicSolver {
 		System.out.println("");
 	}
 	
-	private static void printState(State state) {
+	public static void printState(State state) {
 		int counter = 0;
 		byte[] b = state.getAllCells();
 		for(byte bt : b) {
@@ -115,7 +115,7 @@ public class HeuristicSolver {
 		return s;
 	}
 	
-	private static State createGoalState(int dimension){
+	public static State createGoalState(int dimension){
 		
 		int nbrOfCells = dimension * dimension;
 		byte[] goalCells = new byte[nbrOfCells];
