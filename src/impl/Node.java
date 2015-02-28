@@ -4,8 +4,8 @@ public class Node {
 	
 	private State state;
 	//private Move move;
-	private int cost = 0;
-	private int heuristic = -1;
+	private int cost = 2147483647;
+//	private int heuristic = -1;
 	private Node parent = null;
 	private Action nextAction;
 	
@@ -19,7 +19,6 @@ public class Node {
 	public State getState() {
 		return state;
 	}
-
 	
 	/**
 	 * equality based on state
@@ -45,6 +44,11 @@ public class Node {
 		cost = parent.getCost() + 1;
 	}
 	
+	public void setCost(int cost)
+	{
+		this.cost = cost;
+	}
+	
 	public Node getParent() {
 		return parent;
 	}
@@ -61,13 +65,13 @@ public class Node {
 		this.nextAction = next;
 	}
 
-	public int getHeuristic() {
-		return heuristic;
-	}
-
-	public void setHeuristic(int heuristic) {
-		this.heuristic = heuristic;
+//	public int getHeuristic() {
+//		return heuristic;
+//	}
+//
+//	public void setHeuristic(int heuristic) {
+//		this.heuristic = heuristic;
 		
-	}
+//	}
 
 }
