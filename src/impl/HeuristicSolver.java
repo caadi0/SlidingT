@@ -63,14 +63,14 @@ public class HeuristicSolver {
 				PriorityQueue<Node> selected = null;
 				if(expandAnchor(pq.peek(), p.peek(), i))
 				{
-					selected = p;
+					selected = pq;
 					expandedByAnchor.put(selected.peek().hashCode(), true);
 					System.out.println("Expanded by anchor:");
 					HeuristicSolver.printState(selected.peek().getState());
 				}
 				else
 				{
-					selected = pq;
+					selected = p;
 					expandedByInadmissible.put(selected.peek().hashCode(), true);
 					System.out.println("Expanded by inadmissible heuristic: ");
 					HeuristicSolver.printState(selected.peek().getState());
@@ -79,6 +79,44 @@ public class HeuristicSolver {
 				{
 					printPath(nGoal);
 					System.out.println("path length is :"+pathLength);
+					
+					System.out.println("A*");
+					nGoal = new Node(goalState);
+					PriorityQueue<Node> pq1 = PQueue.createQueue();
+					Node n1 = new Node(randomState);
+					pq1.add(n1);	
+					
+					PriorityQueue<Node> expandedPQ = PQueue.createQueue();
+					
+					while(pq1.isEmpty() == false) {
+//						printAllHeuriticValuesInQueue(pq);
+						Node queueHead = pq1.poll();
+						pq1.remove(queueHead);
+						expandedPQ.add(queueHead);
+						State queueHeadState = queueHead.getState();
+//						System.out.println("Heuristic Cost of removed element : "+ ManhattanDistance.calculate(queueHeadState));
+//						System.out.println("------------");
+						if(queueHead.getState().equals(goalState)) {
+							System.out.println(" Moves ");
+							pathLength = 0;
+							printPath(queueHead);
+							System.out.println("A* no of moves is"+pathLength);
+							break;
+						} else {
+							List<Action> listOfPossibleActions = queueHeadState.getPossibleActions();
+							Iterator<Action> actIter = listOfPossibleActions.iterator();
+							while(actIter.hasNext()) {
+								Action actionOnState = actIter.next();
+								State newState = actionOnState.applyTo(queueHeadState);
+								Node newNode = new Node(newState);
+								if(!expandedPQ.contains(newNode)) {
+									newNode.setParent(queueHead);
+									newNode.setAction(actionOnState);
+									pq1.offer(newNode);	
+								}
+							}
+						}
+					}
 					return;
 				}
 				Node node = selected.remove();
@@ -88,6 +126,8 @@ public class HeuristicSolver {
 	
 		}
 		System.out.println("anchor queue emptied");
+		
+		
 	}
 	
 	private static void expandNode(PriorityQueue<Node> anchorPQ, List<PriorityQueue<Node>> listPQ, Node toBeExpanded)
@@ -104,20 +144,21 @@ public class HeuristicSolver {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
 			Node newNode = new Node(newState);
-			if(visited.get(newState.hashCode()) == null)
-			{
-				// initialise cost to infinity and parent to null;
-			}
+//			if(visited.get(newState.hashCode()) == null)
+//			{
+//				 initialise cost to infinity and parent to null;
+//			}
 			visited.put(newState.hashCode(), true);
 			System.out.println("Visited:");
 			HeuristicSolver.printState(newState);
 			if(newNode.getCost() > toBeExpanded.getCost()+1)
 			{
 				newNode.setParent(toBeExpanded);
-				if(expandedByAnchor.get(newState.hashCode()) == null)
+				if(expandedByAnchor.get(newNode.hashCode()) == null)
 				{
+					removeNodeForSimilarStateFromQueue(anchorPQ, newNode);
 					anchorPQ.add(newNode);
-					if(expandedByInadmissible.get(newState.hashCode()) == null)
+					if(expandedByInadmissible.get(newNode.hashCode()) == null)
 					{
 						addNodeToInadmissibleQueues(listPQ, newNode);
 					}
@@ -129,15 +170,26 @@ public class HeuristicSolver {
 		}
 	}
 	
+	private static void removeNodeForSimilarStateFromQueue(PriorityQueue<Node> pq, Node searchNode)
+	{
+		List<Node> removeList = new ArrayList<Node>();
+		for(Node node: pq)
+		{
+			if(node.hashCode() == searchNode.hashCode())
+				removeList.add(node);
+		}
+		pq.removeAll(removeList);
+	}
+	
 	private static void addNodeToInadmissibleQueues(List<PriorityQueue<Node>> listPQ, Node toBeAdded)
 	{
 		int heuristic = 0;
 		for(PriorityQueue<Node> pq: listPQ)
 		{
 			heuristic++;
-			if(inadmissibleNodeKey(toBeAdded, heuristic) <= anchorKey(toBeAdded))
+			if(inadmissibleNodeKey(toBeAdded, heuristic) <= Constants.w2*anchorKey(toBeAdded))
 			{
-				pq.remove(toBeAdded);
+				removeNodeForSimilarStateFromQueue(pq, toBeAdded);
 				pq.add(toBeAdded);
 			}
 		}
@@ -147,7 +199,7 @@ public class HeuristicSolver {
 	private static Boolean expandAnchor(Node anchor, Node inadmissible, int heuristic)
 	{
 		if(inadmissible == null)
-			return false;
+			return true;
 		
 		Boolean result = false;
 		
