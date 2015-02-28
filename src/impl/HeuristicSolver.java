@@ -69,7 +69,7 @@ public class HeuristicSolver {
 		printState(node.getState());
 	}
 	
-	private static void printAllHeuriticValuesInQueue(PriorityQueue<Node> q) {
+	public static void printAllHeuriticValuesInQueue(PriorityQueue<Node> q) {
 		Iterator<Node> qIter = q.iterator();
 		System.out.print("Heuristic values present in Queue  :   ");
 		while(qIter.hasNext()) {

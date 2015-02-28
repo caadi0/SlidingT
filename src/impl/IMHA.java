@@ -30,15 +30,15 @@ public class IMHA {
 		} else {
 			heuristicCost = RandomHeuristicGenerator.generateRandomHeuristic(i, n.getState());
 		}
-		return n.getCost() + heuristicCost;
+		return n.getCost() + Contants.w1 * heuristicCost;
 	}
 	
 	public static void IMHAStar() throws Exception {
 		// testing code for 10 heuristics 9 - inadmissible and 1 admissible
-		int heuristicCount = 2;
+		int heuristicCount = 10;
 		State randomState = HeuristicSolver.createRandom(3);
 		Node initialNode = new Node(randomState);
-		HeuristicSolver.printPath(initialNode);
+//		HeuristicSolver.printState(randomState);
 		for(int i = 0; i < heuristicCount ; i++) {
 			PriorityQueue<Node> pq = PQueue.getQueueForIndex(i);
 			pq.add(initialNode);
@@ -47,6 +47,11 @@ public class IMHA {
 		Boolean breakFromWhileLoop = false;
 		while(!PQueue.getQueueForIndex(0).isEmpty() && breakFromWhileLoop == false) {
 			for(Integer i = 1 ; i <heuristicCount ; i++) {
+//				System.out.println("Printing elements for queue : "+i);
+//				HeuristicSolver.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
+//				System.out.println("Printing elements for queue 0 ");
+//				HeuristicSolver.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(0));
+				
 				if(getKey(PQueue.getQueueForIndex(i).peek() , i) <= Contants.w2 * getKey(PQueue.getQueueForIndex(0).peek() , 0)) {
 					if(getGoalCostForIndex(i) <= getKey(PQueue.getQueueForIndex(0).peek() , 0)) {
 						HeuristicSolver.printPath(PQueue.getStateWithSameArrangementFromQueue(getGoalNode(), i));
@@ -62,7 +67,7 @@ public class IMHA {
 						break;
 					}
 					Node n = PQueue.getQueueForIndex(0).peek();
-					expand(n, i);
+					expand(n, 0);
 				}
 			}
 		}
@@ -90,11 +95,11 @@ public class IMHA {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
 			Node newNode = new Node(newState);
-			HeuristicSolver.printState(newState);
+//			HeuristicSolver.printState(newState);
 			if(!ExpandedQueue.contains(i,newNode)) {
-				if(newNode.equals(HeuristicSolver.createGoalState(3))) 
-					setGoalCostForIndex(i, newNode.getCost());
 				newNode.setParent(n);
+				if(newNode.equals(getGoalNode())) 
+					setGoalCostForIndex(i, newNode.getCost());
 				newNode.setAction(actionOnState);
 				PQueue.getQueueForIndex(i).add(newNode);
 			}
