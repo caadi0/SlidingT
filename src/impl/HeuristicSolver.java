@@ -12,47 +12,109 @@ import java.util.Random;
 
 public class HeuristicSolver {
 	
-	private static HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
-	private static HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
-	private static HashMap<Integer, Boolean> expandedByInadmissible = new HashMap<Integer, Boolean>();
-	private static Node nGoal = null;
-	private static int pathLength = 0;
+	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
+	private HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
+	private HashMap<Integer, Boolean> expandedByInadmissible = new HashMap<Integer, Boolean>();
+	private Node nGoal = null;
+	private Node nStart = null;
+	private int pathLength = 0;
+	private PrintStream out = null;
+	private State goalState = null;
 
 	public void solveHeuristic() {
 		
 	}
 
-	public static void main(String[] args) throws FileNotFoundException {
-		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
+	public static void main(String[] args) throws FileNotFoundException 
+	{
+		HeuristicSolver heuristicSolver = new HeuristicSolver();
+		heuristicSolver.init();
+	}
+	
+	private void init() throws FileNotFoundException
+	{
+		out = new PrintStream(new FileOutputStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
 		System.setOut(out);
-		State randomState = HeuristicSolver.createRandom(3);
+		
+		State randomState = createRandom(3);
 		System.out.println("Random State");
-		HeuristicSolver.printState(randomState);
+		printState(randomState);
 		
-		State goalState = HeuristicSolver.createGoalState(3);
+		goalState = createGoalState(3);
 		System.out.println("Goal State");
-		HeuristicSolver.printState(goalState);
+		printState(goalState);
 		
-		Node nStart = new Node(randomState);
+		nStart = new Node(randomState);
 		nStart.setCost(0);;
 
 		nGoal = new Node(goalState);
 		
-		PriorityQueue<Node> pq = AnchorQueue.createQueue();
+		SMHAstar();
+		AStar();
+
+	}
+	
+	private void AStar()
+	{
+		System.out.println("A*");
+		nGoal = new Node(goalState);
+		AnchorQueue anchorQueue = new AnchorQueue();
+		PriorityQueue<Node> pq1 = anchorQueue.createQueue();
+		pq1.add(nStart);	
+		
+		AnchorQueue expanded = new AnchorQueue();
+		PriorityQueue<Node> expandedPQ = expanded.createQueue();
+		
+		while(pq1.isEmpty() == false) {
+//			printAllHeuriticValuesInQueue(pq);
+			Node queueHead = pq1.poll();
+			pq1.remove(queueHead);
+			expandedPQ.add(queueHead);
+			State queueHeadState = queueHead.getState();
+//			System.out.println("Heuristic Cost of removed element : "+ ManhattanDistance.calculate(queueHeadState));
+//			System.out.println("------------");
+			if(queueHead.getState().equals(goalState)) {
+				System.out.println(" Moves ");
+				pathLength = 0;
+				printPath(queueHead);
+				System.out.println("A* no of moves is"+pathLength);
+				break;
+			} else {
+				List<Action> listOfPossibleActions = queueHeadState.getPossibleActions();
+				Iterator<Action> actIter = listOfPossibleActions.iterator();
+				while(actIter.hasNext()) {
+					Action actionOnState = actIter.next();
+					State newState = actionOnState.applyTo(queueHeadState);
+					Node newNode = new Node(newState);
+					if(!expandedPQ.contains(newNode)) {
+						newNode.setParent(queueHead);
+						newNode.setAction(actionOnState);
+						pq1.offer(newNode);	
+					}
+				}
+			}
+		}
+	}
+	
+	private void SMHAstar() 
+	{
+		AnchorQueue anchorQueue = new AnchorQueue();
+		PriorityQueue<Node> pq = anchorQueue.createQueue();
 		pq.add(nStart);	
 		
 		List<PriorityQueue<Node>> pqList = new ArrayList<PriorityQueue<Node>>();
 		
 		for(int i=0; i<Constants.NoH; i++)
 		{
-			PriorityQueue<Node> prq = InadmissibleHeuristicQueue.createQueue();
+			InadmissibleHeuristicQueue inadmissibleHeuristicQueue = new InadmissibleHeuristicQueue();
+			PriorityQueue<Node> prq = inadmissibleHeuristicQueue.createQueue();
 			prq.add(nStart);
 			pqList.add(prq);
 		}
 		
 		visited.put(nStart.hashCode(), true);
 		System.out.println("Visited:");
-		HeuristicSolver.printState(nStart.getState());
+		printState(nStart.getState());
 		
 		while(pq.isEmpty() == false) {
 			
@@ -66,57 +128,20 @@ public class HeuristicSolver {
 					selected = pq;
 					expandedByAnchor.put(selected.peek().hashCode(), true);
 					System.out.println("Expanded by anchor:");
-					HeuristicSolver.printState(selected.peek().getState());
+					printState(selected.peek().getState());
 				}
 				else
 				{
 					selected = p;
 					expandedByInadmissible.put(selected.peek().hashCode(), true);
 					System.out.println("Expanded by inadmissible heuristic: ");
-					HeuristicSolver.printState(selected.peek().getState());
+					printState(selected.peek().getState());
 				}
 				if(nGoal.getCost() <= selected.peek().getCost())
 				{
 					printPath(nGoal);
 					System.out.println("path length is :"+pathLength);
 					
-					System.out.println("A*");
-					nGoal = new Node(goalState);
-					PriorityQueue<Node> pq1 = PQueue.createQueue();
-					Node n1 = new Node(randomState);
-					pq1.add(n1);	
-					
-					PriorityQueue<Node> expandedPQ = PQueue.createQueue();
-					
-					while(pq1.isEmpty() == false) {
-//						printAllHeuriticValuesInQueue(pq);
-						Node queueHead = pq1.poll();
-						pq1.remove(queueHead);
-						expandedPQ.add(queueHead);
-						State queueHeadState = queueHead.getState();
-//						System.out.println("Heuristic Cost of removed element : "+ ManhattanDistance.calculate(queueHeadState));
-//						System.out.println("------------");
-						if(queueHead.getState().equals(goalState)) {
-							System.out.println(" Moves ");
-							pathLength = 0;
-							printPath(queueHead);
-							System.out.println("A* no of moves is"+pathLength);
-							break;
-						} else {
-							List<Action> listOfPossibleActions = queueHeadState.getPossibleActions();
-							Iterator<Action> actIter = listOfPossibleActions.iterator();
-							while(actIter.hasNext()) {
-								Action actionOnState = actIter.next();
-								State newState = actionOnState.applyTo(queueHeadState);
-								Node newNode = new Node(newState);
-								if(!expandedPQ.contains(newNode)) {
-									newNode.setParent(queueHead);
-									newNode.setAction(actionOnState);
-									pq1.offer(newNode);	
-								}
-							}
-						}
-					}
 					return;
 				}
 				Node node = selected.remove();
@@ -130,7 +155,7 @@ public class HeuristicSolver {
 		
 	}
 	
-	private static void expandNode(PriorityQueue<Node> anchorPQ, List<PriorityQueue<Node>> listPQ, Node toBeExpanded)
+	private void expandNode(PriorityQueue<Node> anchorPQ, List<PriorityQueue<Node>> listPQ, Node toBeExpanded)
 	{
 		anchorPQ.remove(toBeExpanded);
 		for(PriorityQueue<Node> pq: listPQ)
@@ -150,7 +175,7 @@ public class HeuristicSolver {
 //			}
 			visited.put(newState.hashCode(), true);
 			System.out.println("Visited:");
-			HeuristicSolver.printState(newState);
+			printState(newState);
 			if(newNode.getCost() > toBeExpanded.getCost()+1)
 			{
 				newNode.setParent(toBeExpanded);
@@ -160,7 +185,7 @@ public class HeuristicSolver {
 					anchorPQ.add(newNode);
 					if(expandedByInadmissible.get(newNode.hashCode()) == null)
 					{
-						addNodeToInadmissibleQueues(listPQ, newNode);
+						addOrUpdateNodeToInadmissibleQueues(listPQ, newNode);
 					}
 				}
 			}
@@ -170,7 +195,9 @@ public class HeuristicSolver {
 		}
 	}
 	
-	private static void removeNodeForSimilarStateFromQueue(PriorityQueue<Node> pq, Node searchNode)
+	
+	
+	private void removeNodeForSimilarStateFromQueue(PriorityQueue<Node> pq, Node searchNode)
 	{
 		List<Node> removeList = new ArrayList<Node>();
 		for(Node node: pq)
@@ -181,7 +208,7 @@ public class HeuristicSolver {
 		pq.removeAll(removeList);
 	}
 	
-	private static void addNodeToInadmissibleQueues(List<PriorityQueue<Node>> listPQ, Node toBeAdded)
+	private void addOrUpdateNodeToInadmissibleQueues(List<PriorityQueue<Node>> listPQ, Node toBeAdded)
 	{
 		int heuristic = 0;
 		for(PriorityQueue<Node> pq: listPQ)
@@ -196,7 +223,7 @@ public class HeuristicSolver {
 	}
 	
 	
-	private static Boolean expandAnchor(Node anchor, Node inadmissible, int heuristic)
+	private Boolean expandAnchor(Node anchor, Node inadmissible, int heuristic)
 	{
 		if(inadmissible == null)
 			return true;
@@ -216,7 +243,7 @@ public class HeuristicSolver {
 		return result;
 	}
 	
-	private static void printPath(Node node) {
+	private void printPath(Node node) {
 		if(node.getParent() != null) {
 			printPath(node.getParent());
 //			System.out.println("Tile "+node.getAction().getMove());
@@ -225,18 +252,18 @@ public class HeuristicSolver {
 		pathLength++;
 	}
 	
-	private static int anchorKey(Node anchor)
+	private int anchorKey(Node anchor)
 	{
 		return ((Double)(anchor.getCost() + Constants.w1* ManhattanDistance.calculate(anchor.getState()))).intValue();
 	}
 	
-	private static Double inadmissibleNodeKey(Node inadmissible, int heuristic)
+	private Double inadmissibleNodeKey(Node inadmissible, int heuristic)
 	{
 		return inadmissible.getCost() +Constants.w1*RandomHeuristicGenerator.generateRandomHeuristic
 				(heuristic, inadmissible.getState());
 	}
 	
-	private static void printAllHeuriticValuesInQueue(PriorityQueue<Node> q) {
+	private void printAllHeuriticValuesInQueue(PriorityQueue<Node> q) {
 		Iterator<Node> qIter = q.iterator();
 		System.out.print("Heuristic values present in Queue  :   ");
 		while(qIter.hasNext()) {
@@ -245,7 +272,7 @@ public class HeuristicSolver {
 		System.out.println("");
 	}
 	
-	private static void printState(State state) {
+	private void printState(State state) {
 		int counter = 0;
 		byte[] b = state.getAllCells();
 		for(byte bt : b) {
@@ -257,7 +284,7 @@ public class HeuristicSolver {
 		System.out.println(" ");
 	}
 	
-	public static State createRandom(int dimension) {
+	public State createRandom(int dimension) {
 		State s = new State(createGoalState(dimension).getAllCells());
 		Action old = null;
 		
@@ -282,7 +309,7 @@ public class HeuristicSolver {
 		return s;
 	}
 	
-	private static State createGoalState(int dimension){
+	private State createGoalState(int dimension){
 		
 		int nbrOfCells = dimension * dimension;
 		byte[] goalCells = new byte[nbrOfCells];
