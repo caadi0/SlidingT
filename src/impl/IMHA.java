@@ -1,7 +1,5 @@
 package impl;
 
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +10,6 @@ import queues.PQueue;
 import model.Action;
 import model.Node;
 import model.State;
-import algorithms.AStar;
 import constants.Constants;
 
 public class IMHA {
@@ -35,7 +32,7 @@ public class IMHA {
 	
 	public static void IMHAStar(State startState) throws Exception {
 		// testing code for 20 heuristics 19 - inadmissible and 1 admissible
-		int heuristicCount = 20;
+		int heuristicCount = Constants.NumberOfInadmissibleHeuristicsForSMHAStar;
 		State randomState = startState;
 		
 		// Inserting Goal Node into empty queues
@@ -50,20 +47,20 @@ public class IMHA {
 		
 		Boolean breakFromWhileLoop = false;
 		while(!PQueue.getQueueForIndex(0).isEmpty() && breakFromWhileLoop == false) {
-			System.out.print("Printing elements for queue : "+0 + "  :  ");
-			HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(0));
+//			System.out.print("Printing elements for queue : "+0 + "  :  ");
+//			HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(0));
 			// Paper : line 18
 			for(Integer i = 1 ; i <heuristicCount ; i++) {
-				System.out.print("Printing elements for queue : "+i + "  :  ");
-				HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
+//				System.out.print("Printing elements for queue : "+i + "  :  ");
+//				HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
 				
 				// Paper : line 19
 				if(PQueue.getQueueForIndex(i).peek().getKey() <= Constants.w2 * PQueue.getQueueForIndex(0).peek().getKey()) {
 					// Paper : line 20
 					if(getGoalCostForIndex(i) <= PQueue.getQueueForIndex(i).peek().getKey()) {
-						System.out.println("Getting results from Random Heuristic Search Number : " +i);
-						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(i));
-						System.out.println("Path length using Random heuristic is : "+HeuristicSolverUtility.printPathLength(PQueue.getGoalStateFromQueue(i)));
+//						System.out.println("Getting results from Random Heuristic Search Number : " +i);
+//						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(i));
+						System.out.println("Path length using IMHA is : "+HeuristicSolverUtility.printPathLength(PQueue.getGoalStateFromQueue(i)));
 						breakFromWhileLoop = true;
 						break;
 					}
@@ -73,7 +70,7 @@ public class IMHA {
 					// line 25
 					if(getGoalCostForIndex(0) <= PQueue.getQueueForIndex(0).peek().getKey()) {
 						System.out.println("Getting results from Anchor Search");
-						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(0));
+//						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(0));
 						System.out.println("Path length using Random heuristic is : "+HeuristicSolverUtility.printPathLength(PQueue.getGoalStateFromQueue(0)));
 						breakFromWhileLoop = true;
 						break;
@@ -82,12 +79,12 @@ public class IMHA {
 					expand(n, 0);
 				}
 			}
-			System.out.println("");
+//			System.out.println("");
 		}
-		System.out.println("---------------------------------------");
-		System.out.println("Solution using A star is ");
-		AStar.solveUsingAStar(randomState);
-		System.out.println("total states expanded = "+totalStatesExpanded);
+//		System.out.println("---------------------------------------");
+//		System.out.println("Solution using A star is ");
+//		AStar.solveUsingAStar(randomState);
+//		System.out.println("total states expanded = "+totalStatesExpanded);
 	}
 	
 //	public static void main(String[] args) throws Exception {

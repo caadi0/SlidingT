@@ -40,8 +40,8 @@ public class AStar {
 
 			// If reached goal state
 			if (queueHead.getState().equals(goalState)) {
-				System.out.println(" Moves ");
-				HeuristicSolverUtility.printPath(queueHead);
+//				System.out.println(" Moves ");
+//				HeuristicSolverUtility.printPath(queueHead);
 				System.out.println("Path length using A* is : "
 						+ HeuristicSolverUtility.printPathLength(queueHead));
 				break;
