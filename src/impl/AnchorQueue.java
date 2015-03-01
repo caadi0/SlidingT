@@ -4,9 +4,9 @@ import java.util.Comparator;
 
 public class AnchorQueue extends java.util.PriorityQueue<Node>{
 	
-	private  final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-	public class HeuristicComparator implements Comparator<Node>{
+	public static class HeuristicComparator implements Comparator<Node>{
 
 		@Override
 		public int compare(Node o1, Node o2) {
@@ -27,7 +27,7 @@ public class AnchorQueue extends java.util.PriorityQueue<Node>{
 		}
 	}
 	
-	protected java.util.PriorityQueue<Node> createQueue() {
+	protected static java.util.PriorityQueue<Node> createQueue() {
 		return new java.util.PriorityQueue<Node>(10000, new HeuristicComparator());
 	}
 
