@@ -13,7 +13,7 @@ public class PQueue extends java.util.PriorityQueue<Node> {
 
 	private static final long serialVersionUID = 1L;
 
-	private static HashMap<Integer, PriorityQueue<Node>> priorityQueueMap = new HashMap<Integer, PriorityQueue<Node>>();
+	public static HashMap<Integer, PriorityQueue<Node>> priorityQueueMap = new HashMap<Integer, PriorityQueue<Node>>();
 
 	public static class HeuristicComparator implements Comparator<Node> {
 

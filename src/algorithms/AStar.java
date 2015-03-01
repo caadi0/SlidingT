@@ -55,7 +55,7 @@ public class AStar {
 					Node newNode = new Node(newState, weight);
 					if (!expandedPQ.contains(newNode)) {
 						newNode.setHeuristicCost((double) ManhattanDistance
-								.calculate(queueHeadState));
+								.calculate(newState));
 						newNode.setParent(queueHead);
 						newNode.setAction(actionOnState);
 						pq.offer(newNode);

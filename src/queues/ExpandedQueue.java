@@ -10,7 +10,7 @@ public class ExpandedQueue extends LinkedList<Node> {
 
 	private static final long serialVersionUID = 1774547694456622409L;
 
-	private static HashMap<Integer, ArrayList<Node>> listOfExpandedNodesForAQueue = new HashMap<Integer, ArrayList<Node>>();;
+	public static HashMap<Integer, ArrayList<Node>> listOfExpandedNodesForAQueue = new HashMap<Integer, ArrayList<Node>>();;
 
 	/**
 	 * Inserts into expanded queue for heuristic id = queueNumber, or creates a
