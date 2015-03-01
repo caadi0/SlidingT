@@ -33,8 +33,8 @@ public class HeuristicSolver {
 	
 	private void init() throws FileNotFoundException
 	{
-		out = new PrintStream(new FileOutputStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
-		System.setOut(out);
+//		out = new PrintStream(new FileOutputStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
+//		System.setOut(out);
 		
 		State randomState = createRandom(3);
 		System.out.println("Random State");
@@ -96,39 +96,39 @@ public class HeuristicSolver {
 	
 	private void SMHAstar() 
 	{
-		PriorityQueue<Node> pq = AnchorQueue.createQueue();
-		pq.add(nStart);	
+		PriorityQueue<Node> anchorQueue = AnchorQueue.createQueue();
+		anchorQueue.add(nStart);	
 		
-		List<PriorityQueue<Node>> pqList = new ArrayList<PriorityQueue<Node>>();
+		List<PriorityQueue<Node>> inadmissibleQueueList = new ArrayList<PriorityQueue<Node>>();
 		
 		for(int i=0; i<Constants.NoH; i++)
 		{
-			PriorityQueue<Node> prq = InadmissibleHeuristicQueue.createQueue();
+			PriorityQueue<Node> prq = InadmissibleHeuristicQueue.createQueue(i+1);
 			prq.add(nStart);
-			pqList.add(prq);
+			inadmissibleQueueList.add(prq);
 		}
 		
 		visited.put(nStart.hashCode(), true);
 //		System.out.println("Visited:");
 //		printState(nStart.getState());
 		
-		while(pq.isEmpty() == false) {
+		while(anchorQueue.isEmpty() == false) {
 			
 			int i = 0;
-			for(PriorityQueue<Node> p: pqList)
+			for(PriorityQueue<Node> inadmissibleQueue: inadmissibleQueueList)
 			{
 				i++;
 				PriorityQueue<Node> selected = null;
-				if(expandAnchor(pq.peek(), p.peek(), i))
+				if(expandAnchor(anchorQueue.peek(), inadmissibleQueue.peek(), i))
 				{
-					selected = pq;
+					selected = anchorQueue;
 					expandedByAnchor.put(selected.peek().hashCode(), true);
 //					System.out.println("Expanded by anchor:");
 //					printState(selected.peek().getState());
 				}
 				else
 				{
-					selected = p;
+					selected = inadmissibleQueue;
 					expandedByInadmissible.put(selected.peek().hashCode(), true);
 //					System.out.println("Expanded by inadmissible heuristic: ");
 //					printState(selected.peek().getState());
@@ -142,7 +142,7 @@ public class HeuristicSolver {
 				}
 				Node node = selected.remove();
 				
-				expandNode(pq, pqList, node);
+				expandNode(anchorQueue, inadmissibleQueueList, node);
 			}
 	
 		}
@@ -154,9 +154,11 @@ public class HeuristicSolver {
 	private void expandNode(PriorityQueue<Node> anchorPQ, List<PriorityQueue<Node>> listPQ, Node toBeExpanded)
 	{
 		anchorPQ.remove(toBeExpanded);
+		removeNodeForSimilarStateFromQueue(anchorPQ, toBeExpanded);
 		for(PriorityQueue<Node> pq: listPQ)
 		{
 			pq.remove(toBeExpanded);
+			removeNodeForSimilarStateFromQueue(pq, toBeExpanded);
 		}
 		State state = toBeExpanded.getState();
 		List<Action> listOfPossibleActions = state.getPossibleActions();
@@ -169,7 +171,7 @@ public class HeuristicSolver {
 //			{
 //				 initialise cost to infinity and parent to null;
 //			}
-			visited.put(newState.hashCode(), true);
+			visited.put(newNode.hashCode(), true);
 //			System.out.println("Visited:");
 //			printState(newState);
 			if(newNode.getCost() > toBeExpanded.getCost()+1)
@@ -184,10 +186,12 @@ public class HeuristicSolver {
 						addOrUpdateNodeToInadmissibleQueues(listPQ, newNode);
 					}
 				}
+				
+				if(newNode.hashCode() == nGoal.hashCode())
+//					nGoal.setCost(newNode.getCost());
+					nGoal = newNode;
 			}
-			if(newNode.hashCode() == nGoal.hashCode())
-//				nGoal.setCost(newNode.getCost());
-				nGoal = newNode;
+			
 		}
 	}
 	
@@ -226,7 +230,7 @@ public class HeuristicSolver {
 		
 		Boolean result = false;
 		
-		int minKeyAnchor = anchorKey(anchor);
+		Double minKeyAnchor = anchorKey(anchor);
 		Double minKeyInadmissible = inadmissibleNodeKey(inadmissible, heuristic);
 		if(minKeyInadmissible <= Constants.w2*minKeyAnchor)
 		{
@@ -255,9 +259,9 @@ public class HeuristicSolver {
 		pathLength++;
 	}
 	
-	private int anchorKey(Node anchor)
+	private Double anchorKey(Node anchor)
 	{
-		return ((Double)(anchor.getCost() + Constants.w1* ManhattanDistance.calculate(anchor.getState()))).intValue();
+		return (anchor.getCost() + Constants.w1* ManhattanDistance.calculate(anchor.getState()));
 	}
 	
 	private Double inadmissibleNodeKey(Node inadmissible, int heuristic)

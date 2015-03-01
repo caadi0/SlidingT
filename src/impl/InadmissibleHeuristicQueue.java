@@ -29,10 +29,17 @@ public class InadmissibleHeuristicQueue {
 				return result;
 			
 		}
+		
+		public void setHeuristic(int h)
+		{
+			heuristic = h;
+		}
 	}
 	
-	protected static java.util.PriorityQueue<Node> createQueue() {
-		return new java.util.PriorityQueue<Node>(10000, new HeuristicComparator());
+	protected static java.util.PriorityQueue<Node> createQueue(int h) {
+		HeuristicComparator hc = new HeuristicComparator();
+		hc.setHeuristic(h);
+		return new java.util.PriorityQueue<Node>(10000, hc);
 	}
 
 }
