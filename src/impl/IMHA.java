@@ -7,7 +7,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import queues.ExpandedQueue;
+import queues.PQueue;
+import model.Action;
+import model.Node;
+import model.State;
+import algorithms.AStar;
+import constants.Contants;
+
 public class IMHA {
+	
+	static Integer totalStatesExpanded = 0;
 	
 	/*
 	 * Index = heuristic Number
@@ -23,46 +33,47 @@ public class IMHA {
 		goalCostForHeuristic.put(index, cost);
 	}
 	
-	private static Double getKey(Node n, Integer i) {
-		Double heuristicCost = 0.0;
-		if(i == 0) {
-			heuristicCost = Double.valueOf(ManhattanDistance.calculate(n.getState())+"");
-		} else {
-			heuristicCost = RandomHeuristicGenerator.generateRandomHeuristic(i, n.getState());
-		}
-		return n.getCost() + Contants.w1 * heuristicCost;
-	}
-	
 	public static void IMHAStar() throws Exception {
-		// testing code for 10 heuristics 9 - inadmissible and 1 admissible
-		int heuristicCount = 10;
-		State randomState = HeuristicSolver.createRandom(3);
-		Node initialNode = new Node(randomState);
-//		HeuristicSolver.printState(randomState);
+		// testing code for 20 heuristics 19 - inadmissible and 1 admissible
+		int heuristicCount = 20;
+		State randomState = HeuristicSolverUtility.createRandom(3);
+		
+		// Inserting Goal Node into empty queues
 		for(int i = 0; i < heuristicCount ; i++) {
+			Node initialNode = new Node(randomState, Contants.w1);
+			initialNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, initialNode.getState()));
 			PriorityQueue<Node> pq = PQueue.getQueueForIndex(i);
 			pq.add(initialNode);
 			goalCostForHeuristic.put(i, Integer.MAX_VALUE);
 		}
+		
 		Boolean breakFromWhileLoop = false;
 		while(!PQueue.getQueueForIndex(0).isEmpty() && breakFromWhileLoop == false) {
+			System.out.print("Printing elements for queue : "+0 + "  :  ");
+			HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(0));
+			// Paper : line 18
 			for(Integer i = 1 ; i <heuristicCount ; i++) {
-//				System.out.println("Printing elements for queue : "+i);
-//				HeuristicSolver.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
-//				System.out.println("Printing elements for queue 0 ");
-//				HeuristicSolver.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(0));
+				System.out.print("Printing elements for queue : "+i + "  :  ");
+				HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
 				
-				if(getKey(PQueue.getQueueForIndex(i).peek() , i) <= Contants.w2 * getKey(PQueue.getQueueForIndex(0).peek() , 0)) {
-					if(getGoalCostForIndex(i) <= getKey(PQueue.getQueueForIndex(0).peek() , 0)) {
-						HeuristicSolver.printPath(PQueue.getStateWithSameArrangementFromQueue(getGoalNode(), i));
+				// Paper : line 19
+				if(PQueue.getQueueForIndex(i).peek().getKey() <= Contants.w2 * PQueue.getQueueForIndex(0).peek().getKey()) {
+					// Paper : line 20
+					if(getGoalCostForIndex(i) <= PQueue.getQueueForIndex(i).peek().getKey()) {
+						System.out.println("Getting results from Random Heuristic Search Number : " +i);
+						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(i));
+						System.out.println("Path length using Random heuristic is : "+HeuristicSolverUtility.printPathLength(PQueue.getGoalStateFromQueue(i)));
 						breakFromWhileLoop = true;
 						break;
 					}
 					Node openN = PQueue.getQueueForIndex(i).peek();
 					expand(openN, i);
 				} else {
-					if(getGoalCostForIndex(0) <= getKey(PQueue.getQueueForIndex(0).peek() , 0)) {
-						HeuristicSolver.printPath(PQueue.getStateWithSameArrangementFromQueue(getGoalNode(), i));
+					// line 25
+					if(getGoalCostForIndex(0) <= PQueue.getQueueForIndex(0).peek().getKey()) {
+						System.out.println("Getting results from Anchor Search");
+						HeuristicSolverUtility.printPath(PQueue.getGoalStateFromQueue(0));
+						System.out.println("Path length using Random heuristic is : "+HeuristicSolverUtility.printPathLength(PQueue.getGoalStateFromQueue(0)));
 						breakFromWhileLoop = true;
 						break;
 					}
@@ -70,38 +81,54 @@ public class IMHA {
 					expand(n, 0);
 				}
 			}
+			System.out.println("");
 		}
+		System.out.println("---------------------------------------");
+		System.out.println("Solution using A star is ");
+		AStar.solveUsingAStar(randomState);
+		System.out.println("total states expanded = "+totalStatesExpanded);
 	}
 	
 	public static void main(String[] args) throws Exception {
-		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
-		System.setOut(out);
+//		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
+//		System.setOut(out);
 		IMHA.IMHAStar();
-	}
-	
-	public static Node getGoalNode() {
-		return new Node(HeuristicSolver.createGoalState(3));
 	}
 	
 	public static void expand(Node n, Integer i) {
 		
 		PQueue.getQueueForIndex(i).remove(n);
 		State state = n.getState();
-		ExpandedQueue.insertIntoQueue(i, n);
+		ExpandedQueue.insertIntoExpandedQueue(i, n);
 		
 		List<Action> listOfPossibleActions = state.getPossibleActions();
 		Iterator<Action> actIter = listOfPossibleActions.iterator();
+		Boolean insert = true;
 		while(actIter.hasNext()) {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
-			Node newNode = new Node(newState);
-//			HeuristicSolver.printState(newState);
-			if(!ExpandedQueue.contains(i,newNode)) {
+			Node newNode = new Node(newState , Contants.w1);
+			if(!ExpandedQueue.doesExpandedQueueContainNode(i,newNode)) {
+				newNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, newNode.getState()));
 				newNode.setParent(n);
-				if(newNode.equals(getGoalNode())) 
+				Node findingExistingNode;
+				try {
+					findingExistingNode = PQueue.getStateWithSameArrangementFromQueue(newNode, i);
+					if(findingExistingNode != null) {
+						if(findingExistingNode.getCost() > newNode.getCost()) {
+							PQueue.getQueueForIndex(i).remove(findingExistingNode);
+						} else 
+							insert = false;
+					}
+				} catch (Exception e) {
+					// No action needed
+				}
+				totalStatesExpanded++;
+				if(newState.equals(HeuristicSolverUtility.generateGoalState(3))) 
 					setGoalCostForIndex(i, newNode.getCost());
 				newNode.setAction(actionOnState);
-				PQueue.getQueueForIndex(i).add(newNode);
+				if(insert)
+					PQueue.getQueueForIndex(i).add(newNode);
 			}
 		}
 	}

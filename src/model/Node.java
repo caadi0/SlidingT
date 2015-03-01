@@ -1,19 +1,24 @@
-package impl;
+package model;
+
 
 public class Node {
 	
 	private State state;
-	//private Move move;
 	private int cost = 0;
-	private int heuristic = -1;
 	private Node parent = null;
 	private Action nextAction;
+	private Double heuristicCost;
+	private Double weight;
 	
 	public Node() {}
 	
-	public Node(State state/*, Move m*/) {
+	/**
+	 * @param state
+	 * @param weight - Weight for calculating Key Value
+	 */
+	public Node(State state , Double weight) {
 		this.state = state;
-		//this.move = m;
+		this.weight = weight;
 	}
 	
 	public State getState() {
@@ -61,13 +66,12 @@ public class Node {
 		this.nextAction = next;
 	}
 
-	public int getHeuristic() {
-		return heuristic;
+	public Double getKey() {
+		return (getCost() + this.weight * heuristicCost);
 	}
 
-	public void setHeuristic(int heuristic) {
-		this.heuristic = heuristic;
-		
+	public void setHeuristicCost(Double heuristicCost) {
+		this.heuristicCost = heuristicCost;
 	}
 
 }

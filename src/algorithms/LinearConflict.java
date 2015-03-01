@@ -1,8 +1,10 @@
-package impl;
+package algorithms;
+
+import model.State;
 
 public class LinearConflict {
 
-	protected static int calculate(State s) {
+	public static int calculate(State s) {
 		
 		int heuristic = ManhattanDistance.calculate(s);
 		
