@@ -6,9 +6,9 @@ import java.util.Comparator;
 
 public class InadmissibleHeuristicQueue {
 	
-	private static final long serialVersionUID = 1L;
+	private final long serialVersionUID = 1L;
 
-	public static class HeuristicComparator implements Comparator<Node>{	
+	public class HeuristicComparator implements Comparator<Node>{	
 		
 		int heuristic = 0;
 
@@ -31,7 +31,7 @@ public class InadmissibleHeuristicQueue {
 		}
 	}
 	
-	protected static java.util.PriorityQueue<Node> createQueue() {
+	protected java.util.PriorityQueue<Node> createQueue() {
 		return new java.util.PriorityQueue<Node>(10000, new HeuristicComparator());
 	}
 
