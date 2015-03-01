@@ -1,22 +1,23 @@
-package impl;
+package queues;
+
+import impl.RandomHeuristicGenerator;
 
 import java.util.Comparator;
 
-import algorithms.ManhattanDistance;
-import model.Node;
 import constants.Constants;
+import model.Node;
 
-public class AnchorQueue extends java.util.PriorityQueue<Node>{
-	
-	private static final long serialVersionUID = 1L;
+public class InadmissibleHeuristicQueue {
 
-	public static class HeuristicComparator implements Comparator<Node>{
+	public static class HeuristicComparator implements Comparator<Node>{	
+		
+		int heuristic = 0;
 
 		@Override
 		public int compare(Node o1, Node o2) {
 
-				int result = ((Double)(o1.getCost() + Constants.w1* ManhattanDistance.calculate(o1.getState()) - 
-						(o2.getCost() + Constants.w1* ManhattanDistance.calculate(o2.getState())))).intValue();	
+				int result = ((Double)(o1.getCost() + Constants.w1* RandomHeuristicGenerator.generateRandomHeuristic(heuristic, o1.getState()) - 
+						(o2.getCost() + Constants.w1* RandomHeuristicGenerator.generateRandomHeuristic(heuristic, o2.getState())))).intValue();	
 	//			int result = (ManhattanDistance.calculate(o1.getState()) - ( ManhattanDistance.calculate(o2.getState())));	
 				
 				if (result == 0){
@@ -27,7 +28,7 @@ public class AnchorQueue extends java.util.PriorityQueue<Node>{
 				}
 				
 				return result;
-
+			
 		}
 	}
 	

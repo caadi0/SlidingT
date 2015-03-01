@@ -2,6 +2,7 @@ package impl;
 
 import java.util.Comparator;
 
+import constants.Constants;
 import model.Node;
 
 public class InadmissibleHeuristicQueue {

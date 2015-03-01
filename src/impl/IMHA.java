@@ -13,7 +13,7 @@ import model.Action;
 import model.Node;
 import model.State;
 import algorithms.AStar;
-import constants.Contants;
+import constants.Constants;
 
 public class IMHA {
 	
@@ -33,14 +33,14 @@ public class IMHA {
 		goalCostForHeuristic.put(index, cost);
 	}
 	
-	public static void IMHAStar() throws Exception {
+	public static void IMHAStar(State startState) throws Exception {
 		// testing code for 20 heuristics 19 - inadmissible and 1 admissible
 		int heuristicCount = 20;
-		State randomState = HeuristicSolverUtility.createRandom(3);
+		State randomState = startState;
 		
 		// Inserting Goal Node into empty queues
 		for(int i = 0; i < heuristicCount ; i++) {
-			Node initialNode = new Node(randomState, Contants.w1);
+			Node initialNode = new Node(randomState, Constants.w1);
 			initialNode.setCost(0);
 			initialNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, initialNode.getState()));
 			PriorityQueue<Node> pq = PQueue.getQueueForIndex(i);
@@ -58,7 +58,7 @@ public class IMHA {
 				HeuristicSolverUtility.printAllHeuriticValuesInQueue(PQueue.getQueueForIndex(i));
 				
 				// Paper : line 19
-				if(PQueue.getQueueForIndex(i).peek().getKey() <= Contants.w2 * PQueue.getQueueForIndex(0).peek().getKey()) {
+				if(PQueue.getQueueForIndex(i).peek().getKey() <= Constants.w2 * PQueue.getQueueForIndex(0).peek().getKey()) {
 					// Paper : line 20
 					if(getGoalCostForIndex(i) <= PQueue.getQueueForIndex(i).peek().getKey()) {
 						System.out.println("Getting results from Random Heuristic Search Number : " +i);
@@ -90,11 +90,11 @@ public class IMHA {
 		System.out.println("total states expanded = "+totalStatesExpanded);
 	}
 	
-	public static void main(String[] args) throws Exception {
-//		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
-//		System.setOut(out);
-		IMHA.IMHAStar();
-	}
+//	public static void main(String[] args) throws Exception {
+////		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
+////		System.setOut(out);
+//		IMHA.IMHAStar();
+//	}
 	
 	public static void expand(Node n, Integer i) {
 		
@@ -108,7 +108,7 @@ public class IMHA {
 		while(actIter.hasNext()) {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
-			Node newNode = new Node(newState , Contants.w1);
+			Node newNode = new Node(newState , Constants.w1);
 			if(!ExpandedQueue.doesExpandedQueueContainNode(i,newNode)) {
 				newNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, newNode.getState()));
 				newNode.setParent(n);

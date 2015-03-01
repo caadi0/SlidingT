@@ -1,4 +1,4 @@
-package impl;
+package queues;
 
 import java.util.Comparator;
 

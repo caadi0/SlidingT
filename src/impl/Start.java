@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
 
+import constants.Constants;
 import algorithms.ManhattanDistance;
 import model.Action;
 import model.Node;
 import model.State;
 
-public class HeuristicSolver {
+public class Start {
 	
 	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
@@ -30,13 +31,13 @@ public class HeuristicSolver {
 		
 	}
 
-	public static void main(String[] args) throws FileNotFoundException 
+	public static void main(String[] args) throws Exception 
 	{
-		HeuristicSolver heuristicSolver = new HeuristicSolver();
+		Start heuristicSolver = new Start();
 		heuristicSolver.init();
 	}
 	
-	private void init() throws FileNotFoundException
+	private void init() throws Exception
 	{
 		out = new PrintStream(new FileOutputStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
 		System.setOut(out);
@@ -56,7 +57,7 @@ public class HeuristicSolver {
 		
 		SMHAstar();
 		AStar();
-
+		IMHA.IMHAStar(randomState);
 	}
 	
 	private void AStar()
@@ -106,7 +107,7 @@ public class HeuristicSolver {
 		
 		List<PriorityQueue<Node>> pqList = new ArrayList<PriorityQueue<Node>>();
 		
-		for(int i=0; i<Constants.NoH; i++)
+		for(int i=0; i<Constants.NumberOfInadmissibleHeuristicsForSMHAStar; i++)
 		{
 			PriorityQueue<Node> prq = InadmissibleHeuristicQueue.createQueue();
 			prq.add(nStart);
@@ -256,8 +257,8 @@ public class HeuristicSolver {
 	private void printPathLength(Node node) {
 		if(node.getParent() != null) {
 			printPathLength(node.getParent());
+			pathLength++;
 		}
-		pathLength++;
 	}
 	
 	private int anchorKey(Node anchor)
