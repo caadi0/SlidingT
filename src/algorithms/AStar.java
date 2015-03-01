@@ -26,6 +26,7 @@ public class AStar {
 
 		PriorityQueue<Node> pq = PQueue.createQueue();
 		Node n1 = new Node(randomState, weight);
+		n1.setCost(0);
 		n1.setHeuristicCost((double) ManhattanDistance.calculate(randomState));
 		pq.add(n1);
 

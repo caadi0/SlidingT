@@ -41,6 +41,7 @@ public class IMHA {
 		// Inserting Goal Node into empty queues
 		for(int i = 0; i < heuristicCount ; i++) {
 			Node initialNode = new Node(randomState, Contants.w1);
+			initialNode.setCost(0);
 			initialNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, initialNode.getState()));
 			PriorityQueue<Node> pq = PQueue.getQueueForIndex(i);
 			pq.add(initialNode);

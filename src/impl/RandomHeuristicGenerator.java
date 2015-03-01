@@ -3,7 +3,6 @@ package impl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import model.State;
 import algorithms.LinearConflict;
@@ -24,14 +23,14 @@ public class RandomHeuristicGenerator {
 				+ randNums.get(1) * LinearConflict.calculate(state);
 	}
 
+	
 	private static List<Double> getRandomNumbersForHeuristic(Integer id) {
 		List<Double> listOfRandomNumbers = new ArrayList<Double>();
-		if (randomNumberMap.containsKey(id)) {
+		if(randomNumberMap.containsKey(id)) {
 			listOfRandomNumbers = randomNumberMap.get(id);
 		} else {
-			Random rand = new Random();
-			listOfRandomNumbers.add(rand.nextDouble());
-			listOfRandomNumbers.add(rand.nextDouble());
+			listOfRandomNumbers.add(Math.random());
+			listOfRandomNumbers.add(Math.random());
 			randomNumberMap.put(id, listOfRandomNumbers);
 		}
 		return listOfRandomNumbers;

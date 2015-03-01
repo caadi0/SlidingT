@@ -1,10 +1,10 @@
 package model;
 
-
 public class Node {
 	
 	private State state;
-	private int cost = 0;
+	//private Move move;
+	private int cost = 2147483647;
 	private Node parent = null;
 	private Action nextAction;
 	private Double heuristicCost;
@@ -24,7 +24,6 @@ public class Node {
 	public State getState() {
 		return state;
 	}
-
 	
 	/**
 	 * equality based on state
@@ -48,6 +47,11 @@ public class Node {
 	public void setParent(Node parent) {
 		this.parent = parent;
 		cost = parent.getCost() + 1;
+	}
+	
+	public void setCost(int cost)
+	{
+		this.cost = cost;
 	}
 	
 	public Node getParent() {
