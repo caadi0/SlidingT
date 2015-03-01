@@ -58,12 +58,10 @@ public class HeuristicSolver {
 	{
 		System.out.println("A*");
 		nGoal = new Node(goalState);
-		AnchorQueue anchorQueue = new AnchorQueue();
-		PriorityQueue<Node> pq1 = anchorQueue.createQueue();
+		PriorityQueue<Node> pq1 = PQueue.createQueue();
 		pq1.add(nStart);	
 		
-		AnchorQueue expanded = new AnchorQueue();
-		PriorityQueue<Node> expandedPQ = expanded.createQueue();
+		PriorityQueue<Node> expandedPQ = PQueue.createQueue();
 		
 		while(pq1.isEmpty() == false) {
 //			printAllHeuriticValuesInQueue(pq);
@@ -76,7 +74,7 @@ public class HeuristicSolver {
 			if(queueHead.getState().equals(goalState)) {
 				System.out.println(" Moves ");
 				pathLength = 0;
-				printPath(queueHead);
+				printPathLength(queueHead);
 				System.out.println("A* no of moves is"+pathLength);
 				break;
 			} else {
@@ -98,23 +96,21 @@ public class HeuristicSolver {
 	
 	private void SMHAstar() 
 	{
-		AnchorQueue anchorQueue = new AnchorQueue();
-		PriorityQueue<Node> pq = anchorQueue.createQueue();
+		PriorityQueue<Node> pq = AnchorQueue.createQueue();
 		pq.add(nStart);	
 		
 		List<PriorityQueue<Node>> pqList = new ArrayList<PriorityQueue<Node>>();
 		
 		for(int i=0; i<Constants.NoH; i++)
 		{
-			InadmissibleHeuristicQueue inadmissibleHeuristicQueue = new InadmissibleHeuristicQueue();
-			PriorityQueue<Node> prq = inadmissibleHeuristicQueue.createQueue();
+			PriorityQueue<Node> prq = InadmissibleHeuristicQueue.createQueue();
 			prq.add(nStart);
 			pqList.add(prq);
 		}
 		
 		visited.put(nStart.hashCode(), true);
-		System.out.println("Visited:");
-		printState(nStart.getState());
+//		System.out.println("Visited:");
+//		printState(nStart.getState());
 		
 		while(pq.isEmpty() == false) {
 			
@@ -127,19 +123,19 @@ public class HeuristicSolver {
 				{
 					selected = pq;
 					expandedByAnchor.put(selected.peek().hashCode(), true);
-					System.out.println("Expanded by anchor:");
-					printState(selected.peek().getState());
+//					System.out.println("Expanded by anchor:");
+//					printState(selected.peek().getState());
 				}
 				else
 				{
 					selected = p;
 					expandedByInadmissible.put(selected.peek().hashCode(), true);
-					System.out.println("Expanded by inadmissible heuristic: ");
-					printState(selected.peek().getState());
+//					System.out.println("Expanded by inadmissible heuristic: ");
+//					printState(selected.peek().getState());
 				}
 				if(nGoal.getCost() <= selected.peek().getCost())
 				{
-					printPath(nGoal);
+					printPathLength(nGoal);
 					System.out.println("path length is :"+pathLength);
 					
 					return;
@@ -174,8 +170,8 @@ public class HeuristicSolver {
 //				 initialise cost to infinity and parent to null;
 //			}
 			visited.put(newState.hashCode(), true);
-			System.out.println("Visited:");
-			printState(newState);
+//			System.out.println("Visited:");
+//			printState(newState);
 			if(newNode.getCost() > toBeExpanded.getCost()+1)
 			{
 				newNode.setParent(toBeExpanded);
@@ -246,9 +242,16 @@ public class HeuristicSolver {
 	private void printPath(Node node) {
 		if(node.getParent() != null) {
 			printPath(node.getParent());
-//			System.out.println("Tile "+node.getAction().getMove());
+			System.out.println("Tile "+node.getAction().getMove());
 		}
 		printState(node.getState());
+		pathLength++;
+	}
+	
+	private void printPathLength(Node node) {
+		if(node.getParent() != null) {
+			printPathLength(node.getParent());
+		}
 		pathLength++;
 	}
 	
