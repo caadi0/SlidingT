@@ -4,7 +4,7 @@ public class Node {
 	
 	private State state;
 	//private Move move;
-	private int cost = 2147483647;
+	private int cost = 214748364;
 	private Node parent = null;
 	private Action nextAction;
 	private Double heuristicCost;
