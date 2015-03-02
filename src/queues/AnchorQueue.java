@@ -31,7 +31,7 @@ public class AnchorQueue extends java.util.PriorityQueue<Node>{
 		}
 	}
 	
-	protected static java.util.PriorityQueue<Node> createQueue() {
+	public static java.util.PriorityQueue<Node> createQueue() {
 		return new java.util.PriorityQueue<Node>(10000, new HeuristicComparator());
 	}
 

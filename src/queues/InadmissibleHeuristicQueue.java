@@ -1,4 +1,6 @@
-package impl;
+package queues;
+
+import impl.RandomHeuristicGenerator;
 
 import java.util.Comparator;
 
@@ -35,7 +37,7 @@ public class InadmissibleHeuristicQueue {
 		}
 	}
 	
-	protected static java.util.PriorityQueue<Node> createQueue(int h) {
+	public static java.util.PriorityQueue<Node> createQueue(int h) {
 		HeuristicComparator hc = new HeuristicComparator();
 		hc.setHeuristic(h);
 		return new java.util.PriorityQueue<Node>(10000, hc);
