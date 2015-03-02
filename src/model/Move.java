@@ -1,6 +1,6 @@
-package impl;
+package model;
 
-import impl.State.CellLocation;
+import model.State.CellLocation;
 
 public enum Move {
 

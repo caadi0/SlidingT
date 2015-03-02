@@ -4,15 +4,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import model.State;
+import algorithms.LinearConflict;
+import algorithms.ManhattanDistance;
+
 public class RandomHeuristicGenerator {
-	
+
 	// Contains random numbers for each heuristic to multiply LC and MD
 	private static HashMap<Integer, List<Double>> randomNumberMap = new HashMap<Integer, List<Double>>();
 
-	public static Double generateRandomHeuristic(Integer heuristicID, State state) {
+	public static Double generateRandomHeuristic(Integer heuristicID,
+			State state) {
 		List<Double> randNums = getRandomNumbersForHeuristic(heuristicID);
-		return randNums.get(0) * ManhattanDistance.calculate(state) + randNums.get(1) * LinearConflict.calculate(state);
+
+		if (heuristicID == 0)
+			return (double) ManhattanDistance.calculate(state);
+		return randNums.get(0) * ManhattanDistance.calculate(state)
+				+ randNums.get(1) * LinearConflict.calculate(state);
 	}
+
 	
 	private static List<Double> getRandomNumbersForHeuristic(Integer id) {
 		List<Double> listOfRandomNumbers = new ArrayList<Double>();

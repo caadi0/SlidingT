@@ -1,8 +1,10 @@
-package impl;
+package algorithms;
+
+import model.State;
 
 public class ManhattanDistance {
 
-	protected static int calculate(State s) {
+	public static int calculate(State s) {
 		int counter = 0;
 		byte[] allCells = s.getAllCells();
 		int dimension = s.getDimension();

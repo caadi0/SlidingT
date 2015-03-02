@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import algorithms.ManhattanDistance;
+import model.Node;
+
 public class PQueue extends java.util.PriorityQueue<Node>{
 	
 	private static final long serialVersionUID = 1L;
