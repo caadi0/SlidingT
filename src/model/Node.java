@@ -4,7 +4,7 @@ public class Node {
 	
 	private State state;
 	//private Move move;
-	private int cost = 214748364;
+	private Double cost = Double.POSITIVE_INFINITY;
 	private Node parent = null;
 	private Action nextAction;
 	private Double heuristicCost;
@@ -46,10 +46,10 @@ public class Node {
 	
 	public void setParent(Node parent) {
 		this.parent = parent;
-		cost = parent.getCost() + 1;
+		cost = parent.getCost() + 1.0;
 	}
 	
-	public void setCost(int cost)
+	public void setCost(Double cost)
 	{
 		this.cost = cost;
 	}
@@ -58,7 +58,7 @@ public class Node {
 		return parent;
 	}
 	
-	public int getCost() {
+	public Double getCost() {
 		return cost;
 	}
 

@@ -74,7 +74,7 @@ public class HeuristicSolverUtility {
 		Action old = null;
 		
 		for (int i = 0; i < 500; i++) {
-			List<Action> actions = s.getPossibleActions();
+			List<Action> actions = s.getPossibleActionsForTilePuzzle();
 			// pick an action randomly
 			Random random = new Random();
 			int index = random.nextInt(actions.size());

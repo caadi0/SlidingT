@@ -22,8 +22,10 @@ public class AnchorQueue extends java.util.PriorityQueue<Node>{
 				if (result == 0){
 					//Ties among minimal f values are resolved in favor of the deepest node in the search tree
 					//i.e. the closest node to the goal
-					result =  o2.getCost() - o1.getCost();			
-					
+					if(o2.getCost() - o1.getCost() > 0)
+						return 1;
+					else 
+						return -1;					
 				}
 				
 				return result;

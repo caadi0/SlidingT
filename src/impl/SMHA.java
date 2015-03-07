@@ -28,7 +28,7 @@ public class SMHA {
 	public void SMHAstar(State randomState) 
 	{
 		Node nStart = new Node(randomState, Constants.w1);
-		nStart.setCost(0);
+		nStart.setCost(0.0);
 		
 		State goalState = HeuristicSolverUtility.generateGoalState(3);
 		System.out.println("Goal State");
@@ -100,7 +100,7 @@ public class SMHA {
 			removeNodeForSimilarStateFromQueue(pq, toBeExpanded);
 		}
 		State state = toBeExpanded.getState();
-		List<Action> listOfPossibleActions = state.getPossibleActions();
+		List<Action> listOfPossibleActions = state.getPossibleActionsForTilePuzzle();
 		Iterator<Action> actIter = listOfPossibleActions.iterator();
 		while(actIter.hasNext()) {
 			Action actionOnState = actIter.next();

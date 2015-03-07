@@ -26,7 +26,7 @@ public class AStar {
 
 		PriorityQueue<Node> pq = PQueue.createQueue();
 		Node n1 = new Node(randomState, weight);
-		n1.setCost(0);
+		n1.setCost(0.0);
 		n1.setHeuristicCost((double) ManhattanDistance.calculate(randomState));
 		pq.add(n1);
 
@@ -47,7 +47,7 @@ public class AStar {
 				break;
 			} else {
 				List<Action> listOfPossibleActions = queueHeadState
-						.getPossibleActions();
+						.getPossibleActionsForTilePuzzle();
 				Iterator<Action> actIter = listOfPossibleActions.iterator();
 				while (actIter.hasNext()) {
 					Action actionOnState = actIter.next();

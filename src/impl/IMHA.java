@@ -20,13 +20,13 @@ public class IMHA {
 	 * Index = heuristic Number
 	 * Value = goal state cost
 	 */
-	private static HashMap<Integer, Integer> goalCostForHeuristic = new HashMap<Integer, Integer>();
+	private static HashMap<Integer, Double> goalCostForHeuristic = new HashMap<Integer, Double>();
 	
-	private static Integer getGoalCostForIndex(Integer index) {
+	private static Double getGoalCostForIndex(Integer index) {
 		return goalCostForHeuristic.get(index);
 	}
 	
-	private static void setGoalCostForIndex(Integer index, Integer cost) {
+	private static void setGoalCostForIndex(Integer index, Double cost) {
 		goalCostForHeuristic.put(index, cost);
 	}
 	
@@ -38,11 +38,11 @@ public class IMHA {
 		// Inserting Goal Node into empty queues
 		for(int i = 0; i < heuristicCount ; i++) {
 			Node initialNode = new Node(randomState, Constants.w1);
-			initialNode.setCost(0);
+			initialNode.setCost(0.0);
 			initialNode.setHeuristicCost(RandomHeuristicGenerator.generateRandomHeuristic(i, initialNode.getState()));
 			PriorityQueue<Node> pq = PQueue.getQueueForIndex(i);
 			pq.add(initialNode);
-			goalCostForHeuristic.put(i, Integer.MAX_VALUE);
+			goalCostForHeuristic.put(i, Double.POSITIVE_INFINITY);
 		}
 		
 		Boolean breakFromWhileLoop = false;
@@ -92,19 +92,7 @@ public class IMHA {
 			if(Constants.debug)
 				System.out.println("");
 		}
-		if(Constants.debug) {
-//			System.out.println("---------------------------------------");
-//			System.out.println("Solution using A star is ");
-//			AStar.solveUsingAStar(randomState);
-//			System.out.println("total states expanded = "+totalStatesExpanded);
-		}
 	}
-	
-//	public static void main(String[] args) throws Exception {
-////		PrintStream out = new PrintStream(new FileOutputStream("C:\\Users\\Aaditya\\Desktop\\output.txt"));
-////		System.setOut(out);
-//		IMHA.IMHAStar();
-//	}
 	
 	public static void expand(Node n, Integer i) {
 		
@@ -112,7 +100,7 @@ public class IMHA {
 		State state = n.getState();
 		ExpandedQueue.insertIntoExpandedQueue(i, n);
 		
-		List<Action> listOfPossibleActions = state.getPossibleActions();
+		List<Action> listOfPossibleActions = state.getPossibleActionsForTilePuzzle();
 		Iterator<Action> actIter = listOfPossibleActions.iterator();
 		Boolean insert = true;
 		while(actIter.hasNext()) {
