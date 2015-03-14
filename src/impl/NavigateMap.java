@@ -20,6 +20,7 @@ public class NavigateMap {
 	
 	public static void main(String[] args) {
 		new NavigateMap();
+		new GridSMHA();
 	}
 	
 	public NavigateMap() {
@@ -75,6 +76,7 @@ public class NavigateMap {
 		System.out.println("Path is :-");
 		System.out.println("");
 		Grid2D.printMap();
+		System.out.println("number of expanded states is :-"+expandedPQ.size());
 	}
 	
 	private void setMapPath(Node node) {

@@ -2,8 +2,8 @@ package queues;
 
 import java.util.Comparator;
 
-import algorithms.ManhattanDistance;
 import model.Node;
+import algorithms.EuclideanDistance;
 import constants.Constants;
 
 public class AnchorQueue extends java.util.PriorityQueue<Node>{
@@ -15,8 +15,8 @@ public class AnchorQueue extends java.util.PriorityQueue<Node>{
 		@Override
 		public int compare(Node o1, Node o2) {
 
-				int result = ((Double)(o1.getCost() + Constants.w1* ManhattanDistance.calculate(o1.getState()) - 
-						(o2.getCost() + Constants.w1* ManhattanDistance.calculate(o2.getState())))).intValue();	
+				int result = ((Double)(o1.getCost() + Constants.w1* EuclideanDistance.calculate(o1.getState()) - 
+						(o2.getCost() + Constants.w1* EuclideanDistance.calculate(o2.getState())))).intValue();	
 	//			int result = (ManhattanDistance.calculate(o1.getState()) - ( ManhattanDistance.calculate(o2.getState())));	
 				
 				if (result == 0){
