@@ -24,7 +24,7 @@ public class GridSMHA {
 	HashMap<Integer, Boolean> expandedByAnchor;
 	HashMap<Integer, Boolean> expandedByInadmissible;
 	Node nGoal = null;
-	
+	Integer pathLength = 0;
 	
 	public GridSMHA()
 	{
@@ -82,6 +82,7 @@ public class GridSMHA {
 					System.out.println("");
 					Grid2D.printMap();
 					System.out.println(("number of expanded states is :-"+expandedByAnchor.size())+","+expandedByInadmissible.size());
+					System.out.println("length is :-"+pathLength);
 					return;
 				}
 				
@@ -98,9 +99,13 @@ public class GridSMHA {
 		
 	private void setMapPath(Node node) {
 		if(node.getParent() != null)
+		{
+			pathLength++;
 			setMapPath(node.getParent());
+		}
 		Grid2D.setMapValue(node.getState().getPresentLocation().getRowIndex(), 
 				node.getState().getPresentLocation().getColumnIndex(), "-");
+		
 	}
 
 	private static void removeNodeForSimilarStateFromQueue(PriorityQueue<Node> pq, Node searchNode)

@@ -17,6 +17,7 @@ import model.State.CellLocation;
 public class NavigateMap {
 	
 	HashMap<Node, Boolean> expandedPQ = new HashMap<Node, Boolean>();
+	Integer pathLength = 0;
 	
 	public static void main(String[] args) {
 		new NavigateMap();
@@ -77,11 +78,15 @@ public class NavigateMap {
 		System.out.println("");
 		Grid2D.printMap();
 		System.out.println("number of expanded states is :-"+expandedPQ.size());
+		System.out.println("Length is :-"+pathLength);
 	}
 	
 	private void setMapPath(Node node) {
 		if(node.getParent() != null)
+		{
+			pathLength++;
 			setMapPath(node.getParent());
+		}
 		Grid2D.setMapValue(node.getState().getPresentLocation().getRowIndex(), 
 				node.getState().getPresentLocation().getColumnIndex(), "-");
 	}
