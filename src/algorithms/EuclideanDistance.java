@@ -6,7 +6,7 @@ import model.State.CellLocation;
 
 public class EuclideanDistance {
 
-	public static int calculate(State s) {
+	public static Double calculate(State s) {
 
 		CellLocation location = s.getPresentLocation();
 		int xPos = location.getColumnIndex();
@@ -15,7 +15,8 @@ public class EuclideanDistance {
 		int distance = Double.valueOf((Math.pow(Constants.gridMaxXAxis
 				- xPos, 2.0)
 				+ Math.pow(Constants.gridMaxYAxis - yPos, 2.0))).intValue();
-		return distance;
+		
+		return Math.sqrt(distance);
 		
 	}
 

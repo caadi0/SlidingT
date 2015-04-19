@@ -33,7 +33,7 @@ public class NavigateMap {
 		
 		Node n1 = new Node(startState, 1.0);
 		n1.setCost(0.0);
-		n1.setHeuristicCost(Double.valueOf(""+EuclideanDistance.calculate(startState)));
+		n1.setHeuristicCost(EuclideanDistance.calculate(startState));
 		pq.add(n1);
 		
 		while (pq.isEmpty() == false) {
