@@ -8,6 +8,8 @@ import java.util.Random;
 import model.Action;
 import model.Node;
 import model.State;
+import model.StateConstants;
+import model.SynchronisedNode;
 
 public class HeuristicSolverUtility {
 	
@@ -28,6 +30,18 @@ public class HeuristicSolverUtility {
 	 * @return
 	 */
 	public static Integer printPathLength(Node node) {
+		if(node.getParent() != null) {
+			return 1 + printPathLength(node.getParent());
+		}
+		// Source Node Path Length = 0
+		return 0;
+	}
+	
+	/**
+	 * @param node
+	 * @return
+	 */
+	public static Integer printPathLength(SynchronisedNode node) {
 		if(node.getParent() != null) {
 			return 1 + printPathLength(node.getParent());
 		}
@@ -90,7 +104,7 @@ public class HeuristicSolverUtility {
 			s = a.applyTo(s);
 			old = a;
 		}
-
+		StateConstants.stateMap.put(s.hashCode(), s);
 		return s;
 	}
 	
@@ -111,8 +125,9 @@ public class HeuristicSolverUtility {
 		}
 		goalCells[nbrOfCells - 1] = 0;
 		
-		return new State(goalCells);
-		
+		State goalState = new State(goalCells);
+		StateConstants.stateMap.put(goalState.hashCode(), goalState);
+		return goalState;
 	}
 	
 }

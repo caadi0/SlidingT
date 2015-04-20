@@ -94,6 +94,15 @@ public class State {
 		
 		return hashCode;
 	}
+	
+	public static int hashCode(byte[] allCells)
+	{
+			int result = 17;
+			for (int i = 0; i < allCells.length; i++) {
+					result = 31 * result + allCells[i];
+			}
+		return result;
+	}
 
 	public List<Action> getPossibleActions() {
 		List<Action> actions = new ArrayList<Action>();

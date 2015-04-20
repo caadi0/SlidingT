@@ -23,16 +23,36 @@ public class Start {
 	private static void init() throws Exception
 	{
 
+		Long t1, t2;
 		
-		State randomState = HeuristicSolverUtility.createRandom(3);
+		State randomState = HeuristicSolverUtility.createRandom(4);
 		
 		System.out.println("Random State");
 		HeuristicSolverUtility.printState(randomState);
+		
+		t1 = System.currentTimeMillis();
 		SMHA smha = new SMHA();
 		smha.SMHAstar(randomState);
-		AStar.solveUsingAStar(randomState);
-		ClearQueues.clear();
-		IMHA.IMHAStar(randomState);
+		t2 = System.currentTimeMillis();
+		System.out.println("Time for SMHA*"+(t2-t1));
+		
+//		t1 = System.currentTimeMillis();
+//		AStar.solveUsingAStar(randomState);
+//		t2 = System.currentTimeMillis();
+//		System.out.println("Time for A*"+(t2-t1));
+//		ClearQueues.clear();
+//
+//		t1 = System.currentTimeMillis();
+//		IMHA.IMHAStar(randomState);
+//		t2 = System.currentTimeMillis();
+//		System.out.println("Time for IMHA*"+(t2-t1));
+		
+		t1 = System.currentTimeMillis();
+		ParallelSMHAStar parallelSMHAStar = new ParallelSMHAStar(randomState);
+		t2 = System.currentTimeMillis();
+		System.out.println("Time for parallel SMHA*"+(t2-t1));
+		System.out.println("Time spent waiting:"+parallelSMHAStar.timeSpentWaiting);
+		
 	}
 	
 }

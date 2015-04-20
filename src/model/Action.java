@@ -35,6 +35,14 @@ public class Action {
 		newState.setCellValue(nextCell, value);
 		newState.setCellValue(cell, (byte) 0);
 
+		if(StateConstants.stateMap.get(newState.hashCode()) == null )
+		{
+			StateConstants.stateMap.put(newState.hashCode(), newState);
+		}
+		else
+		{
+			newState = StateConstants.stateMap.get(newState.hashCode());
+		}
 		return newState;
 	}
 

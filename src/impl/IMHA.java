@@ -135,7 +135,7 @@ public class IMHA {
 					// No action needed
 				}
 				totalStatesExpanded++;
-				if(newState.equals(HeuristicSolverUtility.generateGoalState(3))) 
+				if(newState.equals(HeuristicSolverUtility.generateGoalState(4))) 
 					setGoalCostForIndex(i, newNode.getCost());
 				newNode.setAction(actionOnState);
 				if(insert)

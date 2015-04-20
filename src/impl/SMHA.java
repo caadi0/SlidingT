@@ -30,7 +30,7 @@ public class SMHA {
 		Node nStart = new Node(randomState, Constants.w1);
 		nStart.setCost(0);
 		
-		State goalState = HeuristicSolverUtility.generateGoalState(3);
+		State goalState = HeuristicSolverUtility.generateGoalState(4);
 		System.out.println("Goal State");
 		HeuristicSolverUtility.printState(goalState);
 		nGoal = new Node(goalState, Constants.w1);
