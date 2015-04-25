@@ -67,6 +67,7 @@ public class HeuristicSolverUtility {
 	 * @param state
 	 * Prints state cells
 	 */
+	synchronized
 	public static void printState(State state) {
 		int counter = 0;
 		byte[] b = state.getAllCells();

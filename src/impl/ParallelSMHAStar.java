@@ -17,7 +17,7 @@ import constants.Constants;
 
 public class ParallelSMHAStar {
 	
-	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
+//	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByInadmissible = new HashMap<Integer, Boolean>();
 	private SynchronisedNode nGoal = null;
@@ -27,19 +27,18 @@ public class ParallelSMHAStar {
 	private int pathLength = 0;
 	private Boolean waitedOnce = false;
 	public Long timeSpentWaiting = 0l;
+	public Long totalTimeInExpansions = 0l;
+	public int waitCount = 0;
 	
 	
-	public ParallelSMHAStar(State randomStartState)
+	public Boolean ParallelSMHAStar(State randomStartState)
 	{
 		SynchronisedNode nStart = createSynchronisedNode(randomStartState, Constants.w1);
 		nStart.setCost(0);
 		
-		State goalState = HeuristicSolverUtility.generateGoalState(4);
-//		System.out.println("Goal State");
-//		HeuristicSolverUtility.printState(goalState);
+		State goalState = HeuristicSolverUtility.generateGoalState(3);
 		nGoal = createSynchronisedNode(goalState, Constants.w1);
 		AnchorQ<SynchronisedNode> anchorQ = new AnchorQ<SynchronisedNode>(10000, new Comparators.AnchorHeuristicComparator());
-//		AnchorQueue<SynchronisedNode> anchorQ = (AnchorQueue<SynchronisedNode>) AnchorQueue.createQueue();
 		anchorQ.addOverriden(nStart);	
 		
 		List<InadmissibleHeuristicQ<SynchronisedNode>> inadmissibleQList = new ArrayList<InadmissibleHeuristicQ<SynchronisedNode>>();
@@ -51,36 +50,44 @@ public class ParallelSMHAStar {
 			inadmissibleQList.add(prq);
 		}
 		
-		visited.put(nStart.hashCode(), true);
+//		visited.put(nStart.hashCode(), true);
 		
 		threadPool = new HashMap<Integer, Thread>();
 		while(true)
 		{
 			while(threadPool.size() < Constants.NumberOfThreads)
 			{
-				int startValue = heauristicCounter;
+				int startValue = ((heauristicCounter-2+Constants.NumberOfInadmissibleHeuristicsForSMHAStar)
+						%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
 				Boolean anchorStateExpanded = false;
 //				pq.peek().readLock().lock();
-				while(anchorQ.peekOverriden() != null && expandAnchor(anchorQ.peekOverriden(),
-						inadmissibleQList.get(heauristicCounter-1).peekOverriden(), heauristicCounter))
+				SynchronisedNode anchorPeek = anchorQ.peekOverriden();
+				SynchronisedNode inadmissiblePeek = inadmissibleQList.get(heauristicCounter-1).peekOverriden();
+				while(anchorPeek != null && expandAnchor(anchorPeek,
+						inadmissiblePeek, heauristicCounter))
 				{
-					heauristicCounter = (heauristicCounter%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
+					waitCount++;
 					if(startValue == heauristicCounter)
 					{
-						if(nGoal.getCost() <= anchorQ.peekOverriden().getCost())
+						if(nGoal.getCost() <= anchorPeek.getCost())
 						{
+							
 							pathLength = HeuristicSolverUtility.printPathLength(nGoal);
 							System.out.println("path length using SMHA is :"+pathLength);
-							
-							return;
+//							for(int i =0; i< Constants.NumberOfThreads;i++)
+//							{
+//								if(threadPool.get(i) != null)
+//								{
+//									threadPool.get(i).stop();;
+//								}
+//							}
+							return true;
 						}
-						SynchronisedNode selected = anchorQ.peekOverriden();
+						SynchronisedNode selected = anchorPeek;
 						expandedByAnchor.put(selected.hashCode(), true);
-//						HeuristicSolverUtility.printState(selected.getState());
 						Thread thread = new Thread(new ThreadSMHA(0, anchorQ, inadmissibleQList, selected));
-						thread.start();
-						
 						threadPool.put(0, thread);
+						thread.start();
 						for(InadmissibleHeuristicQ<SynchronisedNode> p: inadmissibleQList)
 						{
 							p.removeOverriden(selected);
@@ -92,28 +99,34 @@ public class ParallelSMHAStar {
 						break;
 					}
 					
-					// add logic here
-//					while(!inadmissibleQList.get(heauristicCounter).peekOverriden().readLock().tryLock())
-//					{
-//						heauristicCounter = (heauristicCounter%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
-//					}
-//					inadmissibleQList.get(heauristicCounter).peekOverriden().readLock().unlock();
-					
+					heauristicCounter = (heauristicCounter%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
 				}
-				if(anchorQ.peekOverriden() == null)
+				if(anchorPeek == null)
 				{
-					try {
-						if(waitedOnce)
+					Long time = System.currentTimeMillis();
+					while(anchorQ.size() == 0)
+					{
+						Long timenow = System.currentTimeMillis();
+						if(timenow - time > 50)
 						{
-							System.out.println("anchor queue empty");
-							return;
+							return false;
 						}
-					    Thread.sleep(50);                 //1000 milliseconds is one second.
-					    timeSpentWaiting+=50;
-					    waitedOnce = true;
-					} catch(InterruptedException ex) {
-					    Thread.currentThread().interrupt();
+//						System.out.println("hi");
+								
 					}
+					timeSpentWaiting += System.currentTimeMillis() - time;
+//					try {
+//						if(waitedOnce)
+//						{
+//							System.out.println("anchor queue empty");
+//							return;
+//						}
+//					    Thread.sleep(50);                 //1000 milliseconds is one second.
+//					    timeSpentWaiting+=50;
+//					    waitedOnce = true;
+//					} catch(InterruptedException ex) {
+//					    Thread.currentThread().interrupt();
+//					}
 				}
 				else 
 				{
@@ -121,20 +134,27 @@ public class ParallelSMHAStar {
 					waitedOnce = false;
 					if(!anchorStateExpanded)
 					{
-						if(nGoal.getCost() <= inadmissibleQList.get(heauristicCounter-1).peekOverriden().getCost())
+						if(nGoal.getCost() <= inadmissiblePeek.getCost())
 						{
+							
 							pathLength = HeuristicSolverUtility.printPathLength(nGoal);
 							System.out.println("path length using SMHA is :"+pathLength);
-							
-							return;
+//							for(int i =0; i< Constants.NumberOfThreads;i++)
+//							{
+//								if(threadPool.get(i) != null)
+//								{
+//									threadPool.get(i).stop();;
+//								}
+//							}
+							return true;
 						}
-						SynchronisedNode selected = inadmissibleQList.get(heauristicCounter-1).peekOverriden();
+						SynchronisedNode selected = inadmissiblePeek;
 						expandedByInadmissible.put(selected.hashCode(), true);
 //						HeuristicSolverUtility.printState(selected.getState());
 						Thread thread = new Thread(new ThreadSMHA(heauristicCounter, anchorQ, inadmissibleQList, selected));
-						thread.start();
-						
 						threadPool.put(heauristicCounter, thread);
+
+						thread.start();
 						
 						anchorQ.removeOverriden(selected);
 						for(InadmissibleHeuristicQ<SynchronisedNode> p: inadmissibleQList)
@@ -144,15 +164,7 @@ public class ParallelSMHAStar {
 					}
 				}
 				
-//				if(!firstTime)
-//				{
-//					try {
-//					    Thread.sleep(1000);                 //1000 milliseconds is one second.
-//					    firstTime = true;
-//					} catch(InterruptedException ex) {
-//					    Thread.currentThread().interrupt();
-//					}
-//				}
+//				System.out.println("thread count is:"+threadPool.size());
 			}
 		}
 	}
@@ -202,18 +214,18 @@ public class ParallelSMHAStar {
 			return SynchronisedNode;
 		}
 	}
-	
-	public static void main(String args[])
-	{
-		Long t1, t2;
-		State randomState = HeuristicSolverUtility.createRandom(3);
-		System.out.println("Random State");
-		HeuristicSolverUtility.printState(randomState);
-		t1 = System.currentTimeMillis();
-		new ParallelSMHAStar(randomState);
-		t2 = System.currentTimeMillis();
-		System.out.println("Time taken is:"+(t2-t1));
-	}
+//	
+//	public static void main(String args[])
+//	{
+//		Long t1, t2;
+//		State randomState = HeuristicSolverUtility.createRandom(3);
+//		System.out.println("Random State");
+//		HeuristicSolverUtility.printState(randomState);
+//		t1 = System.currentTimeMillis();
+//		new ParallelSMHAStar(randomState);
+//		t2 = System.currentTimeMillis();
+//		System.out.println("Time taken is:"+(t2-t1));
+//	}
 	
 	public class ThreadSMHA implements Runnable{
 		
@@ -234,7 +246,9 @@ public class ParallelSMHAStar {
 		public void run() {
 			// TODO Auto-generated method stub
 			// expand SynchronisedNode, then:
+			Long time = System.currentTimeMillis();
 			expandSynchronisedNode(anchorPQ, listPQ, toBeExpanded);
+			totalTimeInExpansions += System.currentTimeMillis() - time;
 			threadPool.remove(heuristic);
 		}
 
@@ -242,13 +256,16 @@ public class ParallelSMHAStar {
 	
 	private void expandSynchronisedNode(AnchorQ<SynchronisedNode> anchorPQ, List<InadmissibleHeuristicQ<SynchronisedNode>> listPQ, SynchronisedNode toBeExpanded)
 	{
-		anchorPQ.removeOverriden(toBeExpanded);
-		for(InadmissibleHeuristicQ<SynchronisedNode> pq: listPQ)
-		{
-			pq.removeOverriden(toBeExpanded);
-		}
+//		anchorPQ.removeOverriden(toBeExpanded);
+//		for(InadmissibleHeuristicQ<SynchronisedNode> pq: listPQ)
+//		{
+//			pq.removeOverriden(toBeExpanded);
+//		}
+		
 		
 		State state = toBeExpanded.getState();
+//		HeuristicSolverUtility.printState(state);
+
 		List<Action> listOfPossibleActions = state.getPossibleActions();
 		Iterator<Action> actIter = listOfPossibleActions.iterator();
 		while(actIter.hasNext()) {
@@ -256,7 +273,7 @@ public class ParallelSMHAStar {
 			State newState = actionOnState.applyTo(state);
 			SynchronisedNode newSynchronisedNode = createSynchronisedNode(newState, Constants.w1);
 
-			visited.put(newSynchronisedNode.hashCode(), true);
+//			visited.put(newSynchronisedNode.hashCode(), true);
 			if(newSynchronisedNode.getCost() > toBeExpanded.getCost()+1)
 			{
 				newSynchronisedNode.setParent(toBeExpanded);

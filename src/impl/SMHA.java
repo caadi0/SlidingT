@@ -13,13 +13,15 @@ import queues.InadmissibleHeuristicQueue;
 import model.Action;
 import model.Node;
 import model.State;
+import model.StateConstants;
+import model.SynchronisedNode;
 import algorithms.ManhattanDistance;
 import constants.Constants;
 
 public class SMHA {
 	
 
-	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
+//	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByInadmissible = new HashMap<Integer, Boolean>();
 	private Node nGoal = null;
@@ -27,10 +29,10 @@ public class SMHA {
 	
 	public void SMHAstar(State randomState) 
 	{
-		Node nStart = new Node(randomState, Constants.w1);
+		Node nStart = createNode(randomState, Constants.w1);
 		nStart.setCost(0);
 		
-		State goalState = HeuristicSolverUtility.generateGoalState(4);
+		State goalState = HeuristicSolverUtility.generateGoalState(3);
 		System.out.println("Goal State");
 		HeuristicSolverUtility.printState(goalState);
 		nGoal = new Node(goalState, Constants.w1);
@@ -47,7 +49,7 @@ public class SMHA {
 			pqList.add(prq);
 		}
 		
-		visited.put(nStart.hashCode(), true);
+//		visited.put(nStart.hashCode(), true);
 //		System.out.println("Visited:");
 //		printState(nStart.getState());
 		
@@ -105,12 +107,12 @@ public class SMHA {
 		while(actIter.hasNext()) {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
-			Node newNode = new Node(newState, Constants.w1);
+			Node newNode = createNode(newState, Constants.w1);
 //			if(visited.get(newState.hashCode()) == null)
 //			{
 //				 initialise cost to infinity and parent to null;
 //			}
-			visited.put(newNode.hashCode(), true);
+//			visited.put(newNode.hashCode(), true);
 //			System.out.println("Visited:");
 //			printState(newState);
 			if(newNode.getCost() > toBeExpanded.getCost()+1)
@@ -190,6 +192,20 @@ public class SMHA {
 	{
 		return inadmissible.getCost() +Constants.w1*RandomHeuristicGenerator.generateRandomHeuristic
 				(heuristic, inadmissible.getState());
+	}
+	
+	private Node createNode(State state, Double weight)
+	{
+		if(StateConstants.SynchronisedNodeMap.get(state.hashCode()) != null)
+		{
+			return StateConstants.nodeMap.get(state.hashCode());
+		}
+		else
+		{
+			Node node = new Node(state, weight);
+			StateConstants.nodeMap.put(state.hashCode(), node);
+			return node;
+		}
 	}
 
 }
