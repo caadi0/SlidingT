@@ -25,7 +25,6 @@ public class ParallelSMHAStar {
 //	private int numberOfRunningThreads = 0;
 	private int heauristicCounter = 1;
 	private int pathLength = 0;
-	private Boolean waitedOnce = false;
 	public Long timeSpentWaiting = 0l;
 	public Long totalTimeInExpansions = 0l;
 	public int waitCount = 0;
@@ -33,13 +32,13 @@ public class ParallelSMHAStar {
 	
 	public Boolean ParallelSMHAStar(State randomStartState)
 	{
-		SynchronisedNode nStart = createSynchronisedNode(randomStartState, Constants.w1);
+		SynchronisedNode nStart = createSynchronisedNode(randomStartState, Constants.w1, false);
 		nStart.setCost(0);
 		
 		State goalState = HeuristicSolverUtility.generateGoalState(3);
-		nGoal = createSynchronisedNode(goalState, Constants.w1);
+		nGoal = createSynchronisedNode(goalState, Constants.w1, false);
 		AnchorQ<SynchronisedNode> anchorQ = new AnchorQ<SynchronisedNode>(10000, new Comparators.AnchorHeuristicComparator());
-		anchorQ.addOverriden(nStart);	
+		anchorQ.addOverriden(nStart);	// no need to obtain lock inside this method here
 		
 		List<InadmissibleHeuristicQ<SynchronisedNode>> inadmissibleQList = new ArrayList<InadmissibleHeuristicQ<SynchronisedNode>>();
 		
@@ -47,7 +46,7 @@ public class ParallelSMHAStar {
 		{
 			InadmissibleHeuristicQ<SynchronisedNode> prq = new InadmissibleHeuristicQ<>(10000, new Comparators.InadmissibleHeuristicComparator(i+1));
 			prq.addOverriden(nStart);
-			inadmissibleQList.add(prq);
+			inadmissibleQList.add(prq); // no need to obtain lock inside this method here
 		}
 		
 //		visited.put(nStart.hashCode(), true);
@@ -58,11 +57,14 @@ public class ParallelSMHAStar {
 			while(threadPool.size() < Constants.NumberOfThreads)
 			{
 				int startValue = ((heauristicCounter-2+Constants.NumberOfInadmissibleHeuristicsForSMHAStar)
-						%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
+						%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1; //verify
 				Boolean anchorStateExpanded = false;
-//				pq.peek().readLock().lock();
 				SynchronisedNode anchorPeek = anchorQ.peekOverriden();
+				if(anchorPeek != null)
+					anchorPeek.writeLock().lock();
 				SynchronisedNode inadmissiblePeek = inadmissibleQList.get(heauristicCounter-1).peekOverriden();
+				if(inadmissiblePeek != null)
+					inadmissiblePeek.writeLock().lock();
 				while(anchorPeek != null && expandAnchor(anchorPeek,
 						inadmissiblePeek, heauristicCounter))
 				{
@@ -71,16 +73,9 @@ public class ParallelSMHAStar {
 					{
 						if(nGoal.getCost() <= anchorPeek.getCost())
 						{
-							
+							anchorPeek.writeLock().unlock();
 							pathLength = HeuristicSolverUtility.printPathLength(nGoal);
 							System.out.println("path length using SMHA is :"+pathLength);
-//							for(int i =0; i< Constants.NumberOfThreads;i++)
-//							{
-//								if(threadPool.get(i) != null)
-//								{
-//									threadPool.get(i).stop();;
-//								}
-//							}
 							return true;
 						}
 						SynchronisedNode selected = anchorPeek;
@@ -111,41 +106,19 @@ public class ParallelSMHAStar {
 						{
 							return false;
 						}
-//						System.out.println("hi");
-								
 					}
 					timeSpentWaiting += System.currentTimeMillis() - time;
-//					try {
-//						if(waitedOnce)
-//						{
-//							System.out.println("anchor queue empty");
-//							return;
-//						}
-//					    Thread.sleep(50);                 //1000 milliseconds is one second.
-//					    timeSpentWaiting+=50;
-//					    waitedOnce = true;
-//					} catch(InterruptedException ex) {
-//					    Thread.currentThread().interrupt();
-//					}
 				}
 				else 
 				{
-					
-					waitedOnce = false;
 					if(!anchorStateExpanded)
 					{
-						if(nGoal.getCost() <= inadmissiblePeek.getCost())
+						if(nGoal.getCost() <= inadmissiblePeek.getCost()) // inadmissiblePeek already has a write lock , and 
+							//you are trying to obtain read lock on it as well!
 						{
-							
+							inadmissiblePeek.writeLock().unlock();
 							pathLength = HeuristicSolverUtility.printPathLength(nGoal);
 							System.out.println("path length using SMHA is :"+pathLength);
-//							for(int i =0; i< Constants.NumberOfThreads;i++)
-//							{
-//								if(threadPool.get(i) != null)
-//								{
-//									threadPool.get(i).stop();;
-//								}
-//							}
 							return true;
 						}
 						SynchronisedNode selected = inadmissiblePeek;
@@ -165,6 +138,20 @@ public class ParallelSMHAStar {
 				}
 				
 //				System.out.println("thread count is:"+threadPool.size());
+				try{
+					if(anchorPeek != null)
+						anchorPeek.writeLock().unlock();
+				}catch(IllegalMonitorStateException exception)
+				{
+					System.out.println(exception);
+				}
+				try{
+					if(inadmissiblePeek != null)
+						inadmissiblePeek.writeLock().unlock();
+				}catch(IllegalMonitorStateException exception)
+				{
+					System.out.println(exception);
+				}
 			}
 		}
 	}
@@ -201,17 +188,27 @@ public class ParallelSMHAStar {
 				(heuristic, inadmissible.getState());
 	}
 	
-	private SynchronisedNode createSynchronisedNode(State state, Double weight)
+	private  SynchronisedNode createSynchronisedNode(State state, Double weight, Boolean lock)
 	{
-		if(StateConstants.SynchronisedNodeMap.get(state.hashCode()) != null)
-		{
-			return StateConstants.SynchronisedNodeMap.get(state.hashCode());
-		}
-		else
-		{
-			SynchronisedNode SynchronisedNode = new SynchronisedNode(state, weight);
-			StateConstants.SynchronisedNodeMap.put(state.hashCode(), SynchronisedNode);
-			return SynchronisedNode;
+		synchronized(StateConstants.SynchronisedNodeMap) {
+			SynchronisedNode createdNode = null;
+			if(StateConstants.SynchronisedNodeMap.get(state.hashCode()) != null)
+			{
+				createdNode = StateConstants.SynchronisedNodeMap.get(state.hashCode());
+			}
+			else
+			{
+				SynchronisedNode SynchronisedNode = new SynchronisedNode(state, weight);
+				StateConstants.SynchronisedNodeMap.put(state.hashCode(), SynchronisedNode);
+				createdNode = SynchronisedNode;
+			}
+			if(lock)
+			{
+				createdNode.writeLock().lock(); //this is a little bit of a waste of time. We only need read lock here, 
+				// but in case writing occurs after someone has read previous value but not acted on it yet, it will cause inconsistencies.
+			}
+			
+			return createdNode;
 		}
 	}
 //	
@@ -256,40 +253,46 @@ public class ParallelSMHAStar {
 	
 	private void expandSynchronisedNode(AnchorQ<SynchronisedNode> anchorPQ, List<InadmissibleHeuristicQ<SynchronisedNode>> listPQ, SynchronisedNode toBeExpanded)
 	{
-//		anchorPQ.removeOverriden(toBeExpanded);
-//		for(InadmissibleHeuristicQ<SynchronisedNode> pq: listPQ)
-//		{
-//			pq.removeOverriden(toBeExpanded);
-//		}
-		
 		
 		State state = toBeExpanded.getState();
-//		HeuristicSolverUtility.printState(state);
 
 		List<Action> listOfPossibleActions = state.getPossibleActions();
 		Iterator<Action> actIter = listOfPossibleActions.iterator();
 		while(actIter.hasNext()) {
 			Action actionOnState = actIter.next();
 			State newState = actionOnState.applyTo(state);
-			SynchronisedNode newSynchronisedNode = createSynchronisedNode(newState, Constants.w1);
-
-//			visited.put(newSynchronisedNode.hashCode(), true);
+			SynchronisedNode newSynchronisedNode = createSynchronisedNode(newState, Constants.w1, true);
+			toBeExpanded.readLock().lock();
 			if(newSynchronisedNode.getCost() > toBeExpanded.getCost()+1)
 			{
 				newSynchronisedNode.setParent(toBeExpanded);
+				newSynchronisedNode.writeLock().unlock();
+				toBeExpanded.readLock().unlock();
 				if(expandedByAnchor.get(newSynchronisedNode.hashCode()) == null)
 				{
-					anchorPQ.removeOverriden(newSynchronisedNode);
-					anchorPQ.addOverriden(newSynchronisedNode);
+					synchronized (anchorPQ) {
+						anchorPQ.removeOverriden(newSynchronisedNode);
+						anchorPQ.addOverriden(newSynchronisedNode);
+					}
+					
 					if(expandedByInadmissible.get(newSynchronisedNode.hashCode()) == null)
 					{
 						addOrUpdateSynchronisedNodeToInadmissibleQueues(listPQ, newSynchronisedNode);
 					}
 				}
-//				if(newSynchronisedNode.hashCode() == nGoal.hashCode())
-//					nGoal = newSynchronisedNode;
 			}
-			
+			try{
+				newSynchronisedNode.writeLock().unlock();
+			}catch(IllegalMonitorStateException exception)
+			{
+//				exception.printStackTrace();
+			}
+			try{
+				toBeExpanded.readLock().unlock();
+			}catch(IllegalMonitorStateException exception)
+			{
+//				exception.printStackTrace();
+			}
 		}
 	}
 	
@@ -302,8 +305,10 @@ public class ParallelSMHAStar {
 			if(inadmissibleSynchronisedNodeKey(toBeAdded, heuristic) <= Constants.w2*anchorKey(toBeAdded))
 			{
 //				removeSynchronisedNodeForSimilarStateFromQueue(pq, toBeAdded);
-				pq.removeOverriden(toBeAdded);
-				pq.addOverriden(toBeAdded);
+				synchronized (pq) {
+					pq.removeOverriden(toBeAdded);
+					pq.addOverriden(toBeAdded);
+				}
 			}
 		}
 	}

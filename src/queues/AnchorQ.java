@@ -17,31 +17,36 @@ public class AnchorQ<E> extends PriorityQueue<E>{
 //		synchronized
 		public boolean removeOverriden(Object o) {
 			Boolean result = false;
-			readWriteLock.writeLock().lock();
-			if(!this.isEmpty())
+			if(!this.isEmpty() && o != null)
 			{
+				readWriteLock.writeLock().lock();
 				result = super.remove(o);
+				readWriteLock.writeLock().unlock();
 			}
-			readWriteLock.writeLock().unlock();
 			return result;
 		}
 		
 //		synchronized
 		public boolean addOverriden(E e) {
 			Boolean result = false;
-			readWriteLock.writeLock().lock();
-			result = super.add(e);
-			readWriteLock.writeLock().unlock();
+			if(e != null)
+			{
+				readWriteLock.writeLock().lock();
+				result = super.add(e);
+				readWriteLock.writeLock().unlock();
+			}
 			return result;
 		}
 		
 //		synchronized
 		public E peekOverriden() {
 			E result = null;
-			readWriteLock.readLock().lock();
 			if(!this.isEmpty())
+			{
+				readWriteLock.readLock().lock();
 				result = super.peek();
-			readWriteLock.readLock().unlock();
+				readWriteLock.readLock().unlock();
+			}
 			return result;
 		}
 

@@ -53,9 +53,9 @@ public class SynchronisedNode extends ReentrantReadWriteLock{
 	
 	public void setCost(int cost)
 	{
-		this.writeLock().lock();
+//		this.writeLock().lock();
 		this.cost = cost;
-		this.writeLock().unlock();
+//		this.writeLock().unlock();
 	}
 	
 	public SynchronisedNode getParent() {
