@@ -18,6 +18,7 @@ import constants.Constants;
 
 public class SMHA {
 	
+	Long startTime = null, endTime = null;
 
 	private HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
 	private HashMap<Integer, Boolean> expandedByAnchor = new HashMap<Integer, Boolean>();
@@ -27,10 +28,11 @@ public class SMHA {
 	
 	public void SMHAstar(State randomState) 
 	{
+		startTime = System.nanoTime();
 		Node nStart = new Node(randomState, Constants.w1);
 		nStart.setCost(0);
 		
-		State goalState = HeuristicSolverUtility.generateGoalState(3);
+		State goalState = HeuristicSolverUtility.generateGoalState(5);
 		System.out.println("Goal State");
 		HeuristicSolverUtility.printState(goalState);
 		nGoal = new Node(goalState, Constants.w1);
@@ -64,6 +66,14 @@ public class SMHA {
 					expandedByAnchor.put(selected.peek().hashCode(), true);
 //					System.out.println("Expanded by anchor:");
 //					printState(selected.peek().getState());
+					if(nGoal.getCost() <= anchorKey(selected.peek()))
+					{
+						pathLength = HeuristicSolverUtility.printPathLength(nGoal);
+						System.out.println("path length using SMHA is :"+pathLength);
+						endTime = System.nanoTime();
+						System.out.println("time taken is: "+(endTime-startTime)/1000000);
+						return;
+					}
 				}
 				else
 				{
@@ -71,14 +81,23 @@ public class SMHA {
 					expandedByInadmissible.put(selected.peek().hashCode(), true);
 //					System.out.println("Expanded by inadmissible heuristic: ");
 //					printState(selected.peek().getState());
+					if(nGoal.getCost() <= inadmissibleNodeKey(selected.peek(), i))
+					{
+						pathLength = HeuristicSolverUtility.printPathLength(nGoal);
+						System.out.println("path length using SMHA is :"+pathLength);
+						endTime = System.nanoTime();
+						System.out.println("time taken is: "+(endTime-startTime)/1000000);
+						return;
+					}
 				}
-				if(nGoal.getCost() <= selected.peek().getCost())
-				{
-					pathLength = HeuristicSolverUtility.printPathLength(nGoal);
-					System.out.println("path length using SMHA is :"+pathLength);
-					
-					return;
-				}
+//				if(nGoal.getCost() <= selected.peek().getCost())
+//				{
+//					pathLength = HeuristicSolverUtility.printPathLength(nGoal);
+//					System.out.println("path length using SMHA is :"+pathLength);
+//					endTime = System.nanoTime();
+//					System.out.println("time taken is: "+(endTime-startTime)/1000000);
+//					return;
+//				}
 				Node node = selected.remove();
 				
 				expandNode(pq, pqList, node);
@@ -190,6 +209,18 @@ public class SMHA {
 	{
 		return inadmissible.getCost() +Constants.w1*RandomHeuristicGenerator.generateRandomHeuristic
 				(heuristic, inadmissible.getState());
+	}
+	
+	public static void main(String args[])
+	{
+		State randomState = HeuristicSolverUtility.createRandom(5);
+		
+		System.out.println("Random State");
+		HeuristicSolverUtility.printState(randomState);
+		
+		System.out.println(HeuristicSolverUtility.isStateSolvable(randomState));
+		SMHA smha = new SMHA();
+		smha.SMHAstar(randomState);
 	}
 
 }

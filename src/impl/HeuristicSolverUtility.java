@@ -91,6 +91,7 @@ public class HeuristicSolverUtility {
 			old = a;
 		}
 
+		
 		return s;
 	}
 	
@@ -113,6 +114,23 @@ public class HeuristicSolverUtility {
 		
 		return new State(goalCells);
 		
+	}
+	
+	public static Boolean isStateSolvable(State s)
+	{
+		int parity = 0;
+		byte[] arr = s.getAllCells();
+		for(int i = 0; i<arr.length;i++)
+		{
+			for(int j=i+1;j<arr.length;j++)
+			{
+				if(arr[i]>arr[j])
+					parity++;
+			}
+		}
+		if(parity%2 == 0)
+			return true;
+		return false;
 	}
 	
 }
