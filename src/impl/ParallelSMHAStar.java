@@ -1,14 +1,17 @@
 package impl;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import model.Action;
-import model.SynchronisedNode;
 import model.State;
 import model.StateConstants;
+import model.SynchronisedNode;
 import queues.AnchorQ;
 import queues.Comparators;
 import queues.InadmissibleHeuristicQ;
@@ -22,6 +25,7 @@ public class ParallelSMHAStar {
 	private HashMap<Integer, Boolean> expandedByInadmissible = new HashMap<Integer, Boolean>();
 	private SynchronisedNode nGoal = null;
 	private HashMap<Integer, Thread> threadPool= null;
+//	private int activeThreadCount = 0;
 //	private int numberOfRunningThreads = 0;
 	private int heauristicCounter = 1;
 	private int pathLength = 0;
@@ -29,14 +33,16 @@ public class ParallelSMHAStar {
 	public Long timeSpentWaiting = 0l;
 	public Long totalTimeInExpansions = 0l;
 	public int waitCount = 0;
+	private Long timeAtWhichPreviousExpansionStateWasObtained = 0l;
 	
 	
-	public Boolean ParallelSMHAStar(State randomStartState)
+	public Boolean ParallelSMHAStar(State randomStartState, PrintStream out) throws FileNotFoundException
 	{
+		System.setOut(out);
 		SynchronisedNode nStart = createSynchronisedNode(randomStartState, Constants.w1);
 		nStart.setCost(0);
 		
-		State goalState = HeuristicSolverUtility.generateGoalState(3);
+		State goalState = HeuristicSolverUtility.generateGoalState(4);
 		nGoal = createSynchronisedNode(goalState, Constants.w1);
 		AnchorQ<SynchronisedNode> anchorQ = new AnchorQ<SynchronisedNode>(10000, new Comparators.AnchorHeuristicComparator());
 		anchorQ.addOverriden(nStart);	
@@ -56,6 +62,7 @@ public class ParallelSMHAStar {
 		while(true)
 		{
 			while(threadPool.size() < Constants.NumberOfThreads)
+//			while(activeThreadCount < Constants.NumberOfThreads)
 			{
 				int startValue = ((heauristicCounter-2+Constants.NumberOfInadmissibleHeuristicsForSMHAStar)
 						%Constants.NumberOfInadmissibleHeuristicsForSMHAStar)+1;
@@ -85,8 +92,14 @@ public class ParallelSMHAStar {
 						}
 						SynchronisedNode selected = anchorPeek;
 						expandedByAnchor.put(selected.hashCode(), true);
+						Long timeNow = System.currentTimeMillis();
+						System.out.println("Time taken to ontain state ");
+						HeuristicSolverUtility.printState(selected.getState());
+						System.out.println("for expansion = "+(timeNow - timeAtWhichPreviousExpansionStateWasObtained));
+						timeAtWhichPreviousExpansionStateWasObtained = timeNow;
 						Thread thread = new Thread(new ThreadSMHA(0, anchorQ, inadmissibleQList, selected));
 						threadPool.put(0, thread);
+//						activeThreadCount++;
 						thread.start();
 						for(InadmissibleHeuristicQ<SynchronisedNode> p: inadmissibleQList)
 						{
@@ -151,9 +164,14 @@ public class ParallelSMHAStar {
 						SynchronisedNode selected = inadmissiblePeek;
 						expandedByInadmissible.put(selected.hashCode(), true);
 //						HeuristicSolverUtility.printState(selected.getState());
+						Long timeNow = System.currentTimeMillis();
+						System.out.println("Time taken to ontain state ");
+						HeuristicSolverUtility.printState(selected.getState());
+						System.out.println("for expansion = "+(timeNow - timeAtWhichPreviousExpansionStateWasObtained));
+						timeAtWhichPreviousExpansionStateWasObtained = timeNow;
 						Thread thread = new Thread(new ThreadSMHA(heauristicCounter, anchorQ, inadmissibleQList, selected));
 						threadPool.put(heauristicCounter, thread);
-
+//						activeThreadCount++;
 						thread.start();
 						
 						anchorQ.removeOverriden(selected);
@@ -173,8 +191,10 @@ public class ParallelSMHAStar {
 	private Boolean expandAnchor(SynchronisedNode anchor, SynchronisedNode inadmissible, int heuristic)
 	{
 		if(inadmissible == null)
+		{
+			System.out.println("inadmissible null");
 			return true;
-		
+		}
 		Boolean result = false;
 		
 		Double minKeyAnchor = anchorKey(anchor);
@@ -185,6 +205,7 @@ public class ParallelSMHAStar {
 		}
 		else
 		{
+			System.out.println("anchor");
 			result = true;
 		}
 		return result;
@@ -201,8 +222,10 @@ public class ParallelSMHAStar {
 				(heuristic, inadmissible.getState());
 	}
 	
-	private SynchronisedNode createSynchronisedNode(State state, Double weight)
+	private SynchronisedNode createSynchronisedNode(State state, Double weight)//use AtomicReferenceSynchronisedNodeMap pr synchronise this method
 	{
+		ConcurrentHashMap< Integer, String> map = new ConcurrentHashMap< Integer, String>();
+		
 		if(StateConstants.SynchronisedNodeMap.get(state.hashCode()) != null)
 		{
 			return StateConstants.SynchronisedNodeMap.get(state.hashCode());
@@ -213,6 +236,8 @@ public class ParallelSMHAStar {
 			StateConstants.SynchronisedNodeMap.put(state.hashCode(), SynchronisedNode);
 			return SynchronisedNode;
 		}
+		
+		
 	}
 //	
 //	public static void main(String args[])
@@ -249,7 +274,11 @@ public class ParallelSMHAStar {
 			Long time = System.currentTimeMillis();
 			expandSynchronisedNode(anchorPQ, listPQ, toBeExpanded);
 			totalTimeInExpansions += System.currentTimeMillis() - time;
+//			activeThreadCount--;
 			threadPool.remove(heuristic);
+			System.out.println("time taken to expand this state: ");
+			HeuristicSolverUtility.printState(toBeExpanded.getState());
+			System.out.println(System.currentTimeMillis() - time);
 		}
 
 	}

@@ -22,7 +22,7 @@ public class AStar {
 	public static void solveUsingAStar(State randomState) {
 
 		// Generate goal state
-		State goalState = HeuristicSolverUtility.generateGoalState(4);
+		State goalState = HeuristicSolverUtility.generateGoalState(6);
 
 		PriorityQueue<Node> pq = PQueue.createQueue();
 		Node n1 = new Node(randomState, weight);
@@ -65,4 +65,8 @@ public class AStar {
 		}
 	}
 
+	public static void main(String args[])
+	{
+		new AStar().solveUsingAStar(HeuristicSolverUtility.createRandom(6));
+	}
 }
