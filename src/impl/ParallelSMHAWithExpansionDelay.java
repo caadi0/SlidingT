@@ -1,7 +1,11 @@
 package impl;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,6 +14,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -33,7 +38,7 @@ import constants.Constants;
 
 //do not synchronise nodes while creation, i.e. use SMHA logic instead of parallelSMHA logic
 
-public class ParallelSMHAStarUsingExecutoService {
+public class ParallelSMHAWithExpansionDelay {
 	
 	
 	PriorityBlockingQueue<AtomicNode> anchorQueue = null;
@@ -49,17 +54,21 @@ public class ParallelSMHAStarUsingExecutoService {
 	private Long totalExpansionTime = 0l;
 	Boolean var = false;
 	Boolean timedOut = false;
+	PrintWriter printWriter = null;
 //	Timer timer = null;
 
-ParallelSMHAStarUsingExecutoService(State randomState)
+ParallelSMHAWithExpansionDelay(State randomState, PrintWriter out)  
 {
+	printWriter = out;
 	Timer timer = new Timer();
 	timer.schedule(new TimerTask() {
 		
 		@Override
 		public void run() {
-			System.out.println("parallel SMHA* timed out");
 			timedOut = true;
+			printWriter.println("parallel SMHA* with expansion delay timed out");
+			printWriter.flush();
+			System.exit(0);
 		}
 	}, 60000);
 	startTime = System.currentTimeMillis();
@@ -70,10 +79,16 @@ ParallelSMHAStarUsingExecutoService(State randomState)
 
 		@Override
 		public Void call() throws Exception {
-			obtainStateForExpansion();
+			try {
+				obtainStateForExpansion();
+			} catch (Exception e) {
+				e.printStackTrace();
+				executorService.shutdown();
+			}
 			return null;
 		}
-	});}
+	});
+}
 
 private void initialise(State randomState)
 {
@@ -88,8 +103,10 @@ private void initialise(State randomState)
 	startNode = createAtomicNode(randomState, Constants.w1);
 	startNode.setCost(0);
 	
-	State goalState = HeuristicSolverUtility.generateGoalState(9);
+	State goalState = HeuristicSolverUtility.generateGoalState(7);
+	printWriter.println("goal state is: "+goalState.hashCode());
 	goalNode = createAtomicNode(goalState, Constants.w1);
+	printNeighbours(goalNode);
 	
 	anchorQueue.add(startNode);
 	for(PriorityBlockingQueue<AtomicNode> q: queueList)
@@ -99,9 +116,9 @@ private void initialise(State randomState)
 }
 
 //synchronized 
-private void obtainStateForExpansion()
+private void obtainStateForExpansion() throws Exception
 {
-	try {
+//	try {
 		while(!anchorQueue.isEmpty()) {
 //	System.out.println("In"+Thread.currentThread().getName());
 		Long beg = System.nanoTime();
@@ -118,9 +135,19 @@ private void obtainStateForExpansion()
 
 		AtomicNode nodeSelectedForExpansion = null;
 		Boolean result = null;
-		synchronized(ParallelSMHAStarUsingExecutoService.this){
-		System.out.println("anchor size queue is: "+anchorQueue.size());
+		synchronized(ParallelSMHAWithExpansionDelay.this){
+			int tmpvar = anchorQueue.size();
+//		printWriter.println("anchor size queue is: "+tmpvar);
 		AtomicNode anchorNode = anchorQueue.peek();
+		
+		//for debugging
+//		printWriter.println("available states in heuristic "+currentHeuristic+" queue are:");
+//		for(AtomicNode n: queueList.get(currentHeuristic - 1))
+//		{
+//			printWriter.print(n.hashCode()+" ");
+//		}
+		//debugging over
+		
 		AtomicNode inadmissibleNode = queueList.get(currentHeuristic-1).peek();
 		
 		if(anchorNode == null && inadmissibleNode == null)
@@ -129,7 +156,7 @@ private void obtainStateForExpansion()
 //			System.out.println("time taken for obtaining state : "+(new Date().getTime()-beg));
 			return;
 		}
-		if(inadmissibleNode != null)
+//		if(inadmissibleNode != null)
 //		System.out.println("inadmissible node is: "+inadmissibleNode.hashCode());
 		result = getExpandAnchor(anchorNode, inadmissibleNode, h);
 		
@@ -137,14 +164,28 @@ private void obtainStateForExpansion()
 		{
 			nodeSelectedForExpansion = anchorNode;
 			nodeSelectedForExpansion.setExpandedByAnchor(true);
+			printWriter.println(nodeSelectedForExpansion.hashCode());
+
 		}
 		else
 		{
 			nodeSelectedForExpansion = inadmissibleNode;
 			nodeSelectedForExpansion.setExpandedByInadmissible(true);
+			printWriter.println(nodeSelectedForExpansion.hashCode()+" heuristic: "+h);
+
 		}
-		
+		int tmpvar2 = anchorQueue.size();
+//		printWriter.println("before size: "+tmpvar2);
+		if(tmpvar2 - 30 > tmpvar)
+		{
+			printWriter.println("unusual occurence");
+			for(AtomicNode atomicNode: anchorQueue)
+			{
+				printWriter.println(atomicNode.hashCode());
+			}
+		}
 		anchorQueue.remove(nodeSelectedForExpansion);
+//		printWriter.println("after size: "+anchorQueue.size());
 		for(PriorityBlockingQueue<AtomicNode> queue: queueList)
 		{
 			queue.remove(nodeSelectedForExpansion);
@@ -156,39 +197,41 @@ private void obtainStateForExpansion()
 		
 		if(result && goalNode.getCost() <= anchorKey(expansionNode))
 		{
-			System.out.println("path found");
-			executorService.shutdownNow();
+			printWriter.println("path found");
+//			executorService.shutdownNow();
 			endTime = System.currentTimeMillis();
-			System.out.println("time taken is for parallel SMHA* : "+(endTime-startTime));
+			printWriter.println("time taken is for parallel SMHA* : "+(endTime-startTime));
 
-			System.out.println("total expansion time: "+totalExpansionTime);
-			System.out.println("total state obtaining time: "+totalTimeForObtainingStates);
+			printWriter.println("total expansion time: "+totalExpansionTime);
+			printWriter.println("total state obtaining time: "+totalTimeForObtainingStates);
+			printWriter.flush();
 //		if(timer != null)
 //				timer.cancel();
 //		System.out.println("out");
 
 //			return;
-			throw new Exception("path was found");
+			System.exit(0);
+//			throw new Exception("path found normally");
 		}
 		else if(!result && goalNode.getCost() <= inadmissibleNodeKey(expansionNode, h))
 		{
-			System.out.println("path found");
-			executorService.shutdownNow();
+			printWriter.println("path found");
+//			executorService.shutdownNow();
 			endTime = System.currentTimeMillis();
-			System.out.println("time taken is for parallel SMHA* : "+(endTime-startTime));
-			System.out.println("total expansion time: "+totalExpansionTime);
-			System.out.println("total state obtaining time: "+totalTimeForObtainingStates);
+			printWriter.println("time taken is for parallel SMHA* : "+(endTime-startTime));
+			printWriter.println("total expansion time: "+totalExpansionTime);
+			printWriter.println("total state obtaining time: "+totalTimeForObtainingStates);
+			printWriter.flush();
 //		System.out.println("out");
 //		if(timer != null)
 //				timer.cancel();
 //			return;
-			throw new Exception("path was found");
+			System.exit(0);
+//			throw new Exception("path found normally");
 		}
 		if(timedOut)
-		{
 //			return;
 			throw new Exception("terminate");
-		}
 		var = false;
 //		System.out.println("before listenable future");
 		ListenableFuture<Integer> listenableFuture = executorService.submit(new Callable<Integer>() {
@@ -207,8 +250,13 @@ private void obtainStateForExpansion()
 			  public void onSuccess(Integer index) {
 			    if(!synchronisedBlockExecuting && !anchorQueue.isEmpty())
 			    {
-			    	System.out.println("anchor queue repopulated");
-			    		obtainStateForExpansion();
+//			    	System.out.println("anchor queue repopulated");
+			    	
+			    		try {
+							obtainStateForExpansion();
+						} catch (Exception e) {
+							executorService.shutdown();
+						}
 			    }
 			  }
 			  public void onFailure(Throwable thrown) {
@@ -219,7 +267,7 @@ private void obtainStateForExpansion()
 //		System.out.println("time taken for obtaining state : "+(timediff));
 		totalTimeForObtainingStates+= timediff;
 		}
-		System.out.println("anchor queue empty");
+//		System.out.println("anchor queue empty");
 		synchronisedBlockExecuting = false;
 //	if(!anchorQueue.isEmpty())
 //		obtainStateForExpansion();
@@ -228,13 +276,13 @@ private void obtainStateForExpansion()
 //		System.out.println("anchor queue empty");
 //		synchronisedBlockExecuting = false;
 //	}
-	} catch (Exception e) {
-		e.printStackTrace();
-	}
+//	} catch (Exception e) {
+//		e.printStackTrace();
+//	}
 	
 }
 
-private void obtainNeighbouringStates(AtomicNode toBeExpanded)
+private void obtainNeighbouringStates(AtomicNode toBeExpanded) throws InterruptedException
 {
 	Long beg = System.nanoTime();
 	State state = toBeExpanded.getState();
@@ -270,10 +318,10 @@ private void obtainNeighbouringStates(AtomicNode toBeExpanded)
 					for(PriorityBlockingQueue<AtomicNode> queue: queueList) // add optimisation condition here
 					{
 	//					queue.remove(atomicNode);
-							if((inadmissibleNodeKey(atomicNode, queueList.indexOf(queue)) <= 
-									Constants.w2*anchorKey(atomicNode)) &&
-								!queue.contains(atomicNode))
-								queue.add(atomicNode);
+						if((inadmissibleNodeKey(atomicNode, queueList.indexOf(queue)) <= 
+								Constants.w2*anchorKey(atomicNode)) &&
+							!queue.contains(atomicNode))
+							queue.add(atomicNode);
 					}
 				}
 			}
@@ -281,6 +329,8 @@ private void obtainNeighbouringStates(AtomicNode toBeExpanded)
 	}
 //	System.out.println("out of obtain neighbours");
 	Long timediff = System.nanoTime() - beg;
+//	if(anchorQueue.size() > 1000)
+//	Thread.sleep(3);
 //	System.out.println("time taken for expansion: "+(timediff));
 	totalExpansionTime+=timediff;
 }
@@ -305,18 +355,20 @@ private AtomicNode createAtomicNode(State state, Double weight)
 
 private Boolean getExpandAnchor(AtomicNode anchorNode, AtomicNode inadmissibleNode, int heuristic)
 {
-	if(inadmissibleNode == null)
-		return true;
-	if(anchorNode == null)
-		return false;
-	Double anchorKey = anchorKey(anchorNode);
-	Double inadmissibleNodeKey = inadmissibleNodeKey(inadmissibleNode, heuristic);
-	if(anchorKey > inadmissibleNodeKey)
-	{
-		return false;
-	}
-	else
-		return true;
+		if(inadmissibleNode == null)
+			return true;
+		if(anchorNode == null)
+			return false;
+		Double anchorKey = anchorKey(anchorNode);
+		Double inadmissibleNodeKey = inadmissibleNodeKey(inadmissibleNode, heuristic);
+//		printWriter.println("anchorKey : "+anchorKey);
+//		printWriter.println("inadmissibleNodeKey : "+inadmissibleNodeKey);
+		if(Constants.w2*anchorKey >= inadmissibleNodeKey)
+		{
+			return false;
+		}
+		else
+			return true;
 	
 }
 
@@ -331,13 +383,33 @@ private Double inadmissibleNodeKey(AtomicNode inadmissible, int heuristic)
 			(heuristic, inadmissible.getState());
 }
 
-public static void main(String args[]) throws FileNotFoundException
-{
-	System.setOut(new PrintStream("C:\\Users\\Shipra\\Desktop\\output.txt"));
-//	System.out.println("start");
-	State randomState = HeuristicSolverUtility.createRandom(9);
-//	System.out.println(HeuristicSolverUtility.isStateSolvable(randomState));
-	new ParallelSMHAStarUsingExecutoService(randomState);
+public void printNeighbours(AtomicNode atomicNode) {
+	printWriter.println("neighbours are :");
+	State state = atomicNode.getState();
+	List<Action> listOfPossibleActions = state.getPossibleActions();
+	Iterator<Action> actIter = listOfPossibleActions.iterator();
+	while(actIter.hasNext()) {
+		Action actionOnState = actIter.next();
+		State newState = actionOnState.applyTo(state);
+		printWriter.println(newState.hashCode());
+	}
 }
+
+public static void main(String args[]) throws IOException
+{
+	PrintWriter out =  new PrintWriter(new BufferedWriter(new FileWriter("C:\\Users\\Shipra\\Desktop\\outputTmp.txt", false)));
+//	System.out.println("start");
+	State randomState = HeuristicSolverUtility.createRandom(7);
+	System.out.println(HeuristicSolverUtility.isStateSolvable(randomState));
+	try {
+		new ParallelSMHAWithExpansionDelay(randomState, out);
+	} catch (Exception e) {
+		System.exit(0);
+		System.out.println(e);
+		e.printStackTrace();
+	}
+}
+
+
 
 }

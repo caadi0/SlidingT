@@ -88,7 +88,7 @@ public class HeuristicSolverUtility {
 		State s = new State(generateGoalState(dimension).getAllCells());
 		Action old = null;
 		
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < 50; i++) {
 			List<Action> actions = s.getPossibleActions();
 			// pick an action randomly
 			Random random = new Random();
@@ -105,7 +105,7 @@ public class HeuristicSolverUtility {
 			s = a.applyTo(s);
 			old = a;
 		}
-		StateConstants.stateMap.put(s.hashCode(), s);
+//		StateConstants.stateMap.put(s.hashCode(), s);
 		return s;
 	}
 	
@@ -127,8 +127,25 @@ public class HeuristicSolverUtility {
 		goalCells[nbrOfCells - 1] = 0;
 		
 		State goalState = new State(goalCells);
-		StateConstants.stateMap.put(goalState.hashCode(), goalState);
+//		StateConstants.stateMap.put(goalState.hashCode(), goalState);
 		return goalState;
+	}
+	
+	public static Boolean isStateSolvable(State s)
+	{
+		int parity = 0;
+		byte[] arr = s.getAllCells();
+		for(int i = 0; i<arr.length;i++)
+		{
+			for(int j=i+1;j<arr.length;j++)
+			{
+				if(arr[i]>arr[j])
+					parity++;
+			}
+		}
+		if(parity%2 == 0)
+			return true;
+		return false;
 	}
 	
 }
