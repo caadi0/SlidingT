@@ -4,6 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
 
+import constants.Constants;
+
 public class AtomicNode {
 	
 	private State state;
@@ -15,6 +17,7 @@ public class AtomicNode {
 	private Double weight;
 	private Boolean expandedByAnchor = false;
 	private Boolean expandedByInadmissible = false;
+	public Integer[] insertedIntoQueues = new Integer[Constants.NumberOfInadmissibleHeuristicsForSMHAStar+1];
 	public AtomicNode() {}
 	
 	/**
@@ -24,7 +27,11 @@ public class AtomicNode {
 	public AtomicNode(State state , Double weight) {
 		this.state = state;
 		this.weight = weight;
-		cost = new AtomicInteger(Integer.MAX_VALUE);
+		cost = new AtomicInteger(Integer.MAX_VALUE - 1000);
+		for(int i=0; i<= Constants.NumberOfInadmissibleHeuristicsForSMHAStar; i++)
+		{
+			insertedIntoQueues[i] = 0;
+		}
 	}
 	
 	public State getState() {

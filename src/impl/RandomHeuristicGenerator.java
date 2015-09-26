@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import model.State;
+import algorithms.GenericLinearConflict;
+import algorithms.GenericManhattanDistance;
 import algorithms.LinearConflict;
 import algorithms.ManhattanDistance;
 
@@ -21,6 +23,16 @@ public class RandomHeuristicGenerator {
 			return (double) ManhattanDistance.calculate(state);
 		return randNums.get(0) * ManhattanDistance.calculate(state)
 				+ randNums.get(1) * LinearConflict.calculate(state);
+	}
+	
+	public static Double generateRandomHeuristic(Integer heuristicID,
+			State state, State goalState) {
+		List<Double> randNums = getRandomNumbersForHeuristic(heuristicID);
+
+		if (heuristicID == 0)
+			return (double) GenericManhattanDistance.calculate(state, goalState);
+		return randNums.get(0) * GenericManhattanDistance.calculate(state, goalState)
+				+ randNums.get(1) * GenericLinearConflict.calculate(state, goalState);
 	}
 
 	

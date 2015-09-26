@@ -88,7 +88,32 @@ public class HeuristicSolverUtility {
 		State s = new State(generateGoalState(dimension).getAllCells());
 		Action old = null;
 		
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < 500; i++) {
+			List<Action> actions = s.getPossibleActions();
+			// pick an action randomly
+			Random random = new Random();
+			int index = random.nextInt(actions.size());
+			Action a = actions.get(index);
+			if (old != null && old.isInverse(a)){
+				if (index == 0){
+					index = 1;
+				}else{
+					index--;
+				}
+				a = actions.get(index);
+			}
+			s = a.applyTo(s);
+			old = a;
+		}
+//		StateConstants.stateMap.put(s.hashCode(), s);
+		return s;
+	}
+	
+	public static State createRandom(int dimension, int randomisationFactor) {
+		State s = new State(generateGoalState(dimension).getAllCells());
+		Action old = null;
+		
+		for (int i = 0; i < randomisationFactor; i++) {
 			List<Action> actions = s.getPossibleActions();
 			// pick an action randomly
 			Random random = new Random();
