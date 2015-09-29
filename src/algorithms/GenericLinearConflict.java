@@ -27,7 +27,7 @@ public class GenericLinearConflict {
 		{
 			for(int j=0;j<dimension;j++)
 			{
-				destination[counter] = s.getCellValue(i, j);
+				source[counter] = s.getCellValue(i, j);
 				counter++;
 			}
 		}
