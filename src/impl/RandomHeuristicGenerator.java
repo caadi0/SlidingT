@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import constants.Constants;
 import model.State;
 import algorithms.GenericLinearConflict;
 import algorithms.GenericManhattanDistance;
@@ -31,8 +32,8 @@ public class RandomHeuristicGenerator {
 
 		if (heuristicID == 0)
 			return (double) GenericManhattanDistance.calculate(state, goalState);
-		return randNums.get(0) * GenericManhattanDistance.calculate(state, goalState)
-				+ randNums.get(1) * GenericLinearConflict.calculate(state, goalState);
+		return  (double)(GenericManhattanDistance.calculate(state, goalState)
+				+  GenericLinearConflict.calculate(state, goalState) + Constants.randomisationFactor);
 	}
 
 	

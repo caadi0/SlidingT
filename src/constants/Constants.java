@@ -9,4 +9,5 @@ public class Constants {
 	public static final int NumberOfThreads = 6;
 	public static final int randomisationFactor = 100;
 	public static final int dimension = 5;
+	public static final int startStateRandomisationFactor = 500;
 }

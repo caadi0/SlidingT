@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
 
+import constants.Constants;
 import model.Action;
 import model.Node;
 import model.State;
@@ -88,7 +89,7 @@ public class HeuristicSolverUtility {
 		State s = new State(generateGoalState(dimension).getAllCells());
 		Action old = null;
 		
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < Constants.startStateRandomisationFactor; i++) {
 			List<Action> actions = s.getPossibleActions();
 			// pick an action randomly
 			Random random = new Random();

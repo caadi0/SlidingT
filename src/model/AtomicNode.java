@@ -27,7 +27,7 @@ public class AtomicNode {
 	public AtomicNode(State state , Double weight) {
 		this.state = state;
 		this.weight = weight;
-		cost = new AtomicInteger(Integer.MAX_VALUE - 1000);
+		cost = new AtomicInteger(Integer.MAX_VALUE - 100000);
 		for(int i=0; i<= Constants.NumberOfInadmissibleHeuristicsForSMHAStar; i++)
 		{
 			insertedIntoQueues[i] = 0;
